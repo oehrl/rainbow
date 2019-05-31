@@ -1,0 +1,24 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(GLM_TEST_ENABLE OFF)
+add_subdirectory(extern/glm)
+add_subdirectory(extern/assimp)
+
+add_executable(rainbow
+  src/main.cpp
+  src/scene.cpp
+  src/intersection.cpp
+)
+
+target_include_directories(rainbow
+  PRIVATE "include/"
+)
+
+target_link_libraries(rainbow
+  PRIVATE assimp glm
+)
+
+set_target_properties(rainbow
+  PROPERTIES
+    CXX_STANDARD 17
+)
