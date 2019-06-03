@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <assimp/postprocess.h>
+#include <glm/gtx/string_cast.hpp>
 
 namespace rainbow {
 
@@ -21,6 +22,8 @@ Scene::Scene(const std::string& filename) : scene_{nullptr} {
 }
 
 std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
+  assert(IsValid());
+
   std::optional<HitPoint> hitpoint;
 
   for (unsigned int i = 0; i < scene_->mNumMeshes; ++i) {
