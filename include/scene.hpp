@@ -26,6 +26,8 @@ class Scene {
 
   std::optional<HitPoint> ShootRay(const Ray& ray) const;
 
+  inline bool IsValid() const { return scene_ != nullptr; }
+
  private:
   Assimp::Importer importer_;
   const aiScene* scene_;
