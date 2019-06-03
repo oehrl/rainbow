@@ -17,6 +17,6 @@ std::optional<RayTriangleIntersection> ComputeRayTriangleIntersection(
   } else {
     return {};
   }
-}  // namespace rainbow
+}
 
 }  // namespace rainbow
