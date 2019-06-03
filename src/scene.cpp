@@ -1,8 +1,9 @@
 #include "scene.hpp"
 
-#include <assimp/postprocess.h>
 #include <cassert>
 #include <iostream>
+
+#include <assimp/postprocess.h>
 
 namespace rainbow {
 
@@ -17,9 +18,6 @@ inline glm::vec3 ConvertAssimpVectorToGLM(const aiVector3D& vector) {
 Scene::Scene(const std::string& filename) : scene_{nullptr} {
   scene_ = importer_.ReadFile(filename,
                               aiProcess_Triangulate | aiProcess_GenNormals);
-  for (unsigned int i = 0; i < scene_->mNumMeshes; ++i) {
-    std::cout << "Mesh: " << scene_->mMeshes[i]->mName.C_Str() << std::endl;
-  }
 }
 
 std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
@@ -41,7 +39,7 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
       }
 
       const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
-      if (intersection &&
+      if (intersection && intersection->distance >= 0.0f &&
           (!hitpoint || hitpoint->distance > intersection->distance)) {
         const auto normal =
             normals[0] * intersection->barycentric_coordinates.x +
