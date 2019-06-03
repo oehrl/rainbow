@@ -21,10 +21,10 @@ void Camera::ComputeViewRays(glm::uvec2 resolution,
   //     std::isnan(vertical_field_of_view)) {
   // }
 
-  glm::mat4 p = glm::yawPitchRoll(yaw_, pitch_, 0.0f);
-  glm::vec3 right = p[0];
-  glm::vec3 up = p[1];
-  glm::vec3 forward = p[2];
+  glm::vec3 right;
+  glm::vec3 up;
+  glm::vec3 forward;
+  GetAxisVectors(&right, &up, &forward);
 
   for (unsigned y = 0; y < resolution.y; ++y) {
     const float y_normalized =
@@ -44,6 +44,20 @@ void Camera::ComputeViewRays(glm::uvec2 resolution,
 void Camera::Rotate(float yaw, float pitch) {
   yaw_ += yaw;
   pitch_ += pitch;
+}
+
+void Camera::GetAxisVectors(glm::vec3* right, glm::vec3* up,
+                            glm::vec3* forward) const {
+  glm::mat4 rotation_matrix = glm::yawPitchRoll(yaw_, pitch_, 0.0f);
+  if (right != nullptr) {
+    *right = rotation_matrix[0];
+  }
+  if (up != nullptr) {
+    *up = rotation_matrix[1];
+  }
+  if (forward != nullptr) {
+    *forward = rotation_matrix[2];
+  }
 }
 
 }  // namespace rainbow

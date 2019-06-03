@@ -3,6 +3,8 @@
 #include <chrono>
 #include <iostream>
 
+#include <glm/geometric.hpp>
+
 namespace rainbow {
 
 Application::Application() {
@@ -37,6 +39,10 @@ void Application::Run() {
       while (SDL_PollEvent(&event)) {
         ProcessEvent(event);
       }
+      const auto current_time = std::chrono::steady_clock::now();
+      Update(current_time - last_update_);
+      last_update_ = current_time;
+
     } else {
       if (SDL_WaitEvent(&event)) {
         ProcessEvent(event);
@@ -58,13 +64,13 @@ void Application::ProcessEvent(const SDL_Event& event) {
 
     case SDL_MOUSEBUTTONDOWN:
       if (event.button.button == SDL_BUTTON_LEFT) {
-        interactive_mode_ = true;
+        EnterInteractiveMode();
       }
       break;
 
     case SDL_MOUSEBUTTONUP:
       if (event.button.button == SDL_BUTTON_LEFT) {
-        interactive_mode_ = false;
+        LeaveInteractiveMode();
       }
       break;
 
@@ -113,5 +119,48 @@ void Application::RenderPreview() {
       << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
       << "ms" << std::endl;
 }
+
+void Application::EnterInteractiveMode() {
+  interactive_mode_ = true;
+  last_update_ = std::chrono::steady_clock::now();
+}
+
+void Application::Update(std::chrono::duration<float> elapsed_time) {
+  glm::vec3 move_vector{0.0f, 0.0f, 0.0f};
+  const Uint8* keys = SDL_GetKeyboardState(nullptr);
+
+  glm::vec3 right;
+  glm::vec3 up;
+  glm::vec3 forward;
+  camera_.GetAxisVectors(&right, &up, &forward);
+
+  if (keys[SDL_SCANCODE_W]) {
+    move_vector += forward;
+  }
+  if (keys[SDL_SCANCODE_S]) {
+    move_vector -= forward;
+  }
+  if (keys[SDL_SCANCODE_D]) {
+    move_vector += right;
+  }
+  if (keys[SDL_SCANCODE_A]) {
+    move_vector -= right;
+  }
+  if (keys[SDL_SCANCODE_E]) {
+    move_vector += up;
+  }
+  if (keys[SDL_SCANCODE_Q]) {
+    move_vector -= up;
+  }
+
+  float length = glm::length(move_vector);
+  if (length > std::numeric_limits<float>::epsilon()) {
+    std::cout << "Length: " << length << std::endl;
+    camera_.Move(move_vector * (elapsed_time.count() / length));
+    redraw_preview_ = true;
+  }
+}
+
+void Application::LeaveInteractiveMode() { interactive_mode_ = false; }
 
 }  // namespace rainbow

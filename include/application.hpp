@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include <SDL2/SDL.h>
 #include "camera.hpp"
 #include "scene.hpp"
@@ -30,8 +32,14 @@ class Application final {
   bool interactive_mode_ = false;
   bool redraw_preview_ = false;
 
+  std::chrono::steady_clock::time_point last_update_;
+
   void ProcessEvent(const SDL_Event& event);
   void RenderPreview();
+
+  void EnterInteractiveMode();
+  void Update(std::chrono::duration<float> elapsed_time);
+  void LeaveInteractiveMode();
 };
 
 }  // namespace rainbow

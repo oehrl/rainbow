@@ -21,7 +21,29 @@ class Camera {
     return rays;
   }
 
+  inline void Move(const glm::vec3& offset) { position_ += offset; }
+
   void Rotate(float yaw, float pitch);
+  void GetAxisVectors(glm::vec3* right, glm::vec3* up,
+                      glm::vec3* forward) const;
+
+  inline glm::vec3 GetRightVector() const {
+    glm::vec3 right;
+    GetAxisVectors(&right, nullptr, nullptr);
+    return right;
+  }
+
+  inline glm::vec3 GetUpVector() const {
+    glm::vec3 up;
+    GetAxisVectors(nullptr, &up, nullptr);
+    return up;
+  }
+
+  inline glm::vec3 GetForwardVector() const {
+    glm::vec3 forward;
+    GetAxisVectors(nullptr, nullptr, &forward);
+    return forward;
+  }
 
  private:
   glm::vec3 position_ = glm::vec3{0.0f, 1.0f, 10.0f};
