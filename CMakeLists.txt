@@ -4,6 +4,8 @@ set(GLM_TEST_ENABLE OFF)
 add_subdirectory(extern/glm)
 add_subdirectory(extern/assimp)
 
+find_package(SDL2 REQUIRED)
+
 add_executable(rainbow
   src/main.cpp
   src/scene.cpp
@@ -15,7 +17,7 @@ target_include_directories(rainbow
 )
 
 target_link_libraries(rainbow
-  PRIVATE assimp glm
+  PRIVATE assimp glm SDL2
 )
 
 set_target_properties(rainbow
