@@ -22,7 +22,10 @@ bool Application::LoadScene(const std::string& filename) {
     RenderPreview();
     return true;
   } else {
-    std::cerr << "Failed to load `" << filename << "`" << std::endl;
+    std::string error_string = "Failed to load scene: `" + filename + "`";
+    SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Loading failed",
+                             error_string.c_str(), window_);
+    std::cerr << error_string << std::endl;
     return false;
   }
 }
