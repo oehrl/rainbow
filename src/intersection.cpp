@@ -8,7 +8,7 @@ std::optional<RayTriangleIntersection> ComputeRayTriangleIntersection(
   glm::vec2 barycentric_coordinates;
   float distance;
   if (glm::intersectRayTriangle(ray.origin, ray.direction, triangle.vertices[0],
-                                triangle.vertices[1], triangle.vertices[3],
+                                triangle.vertices[1], triangle.vertices[2],
                                 barycentric_coordinates, distance)) {
     return RayTriangleIntersection{
         ray.origin + distance * ray.direction, distance,
