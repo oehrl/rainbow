@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 
   const auto t0 = std::chrono::steady_clock::now();
   int x = 0;
-  int y = 0;
+  int y = resolution.y - 1;
   for (const auto& view_ray : view_rays) {
     const auto hitpoint = scene.ShootRay(view_ray);
     if (hitpoint) {
@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
     ++x;
     if (x == resolution.x) {
       x = 0;
-      ++y;
+      --y;
     }
   }
   SDL_GL_SwapWindow(window);
