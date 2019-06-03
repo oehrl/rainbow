@@ -16,9 +16,12 @@ inline glm::vec3 ConvertAssimpVectorToGLM(const aiVector3D& vector) {
 
 }  // namespace
 
-Scene::Scene(const std::string& filename) : scene_{nullptr} {
+Scene::Scene() : scene_{nullptr} {}
+
+bool Scene::Load(const std::string& filename) {
   scene_ = importer_.ReadFile(filename,
                               aiProcess_Triangulate | aiProcess_GenNormals);
+  return IsValid();
 }
 
 std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {

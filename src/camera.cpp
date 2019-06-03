@@ -9,7 +9,7 @@
 namespace rainbow {
 
 void Camera::ComputeViewRays(glm::uvec2 resolution,
-                             std::vector<Ray>* ray_buffer) {
+                             std::vector<Ray>* ray_buffer) const {
   assert(ray_buffer != nullptr);
   const auto ray_count = resolution.x * resolution.y;
   ray_buffer->resize(0);
@@ -39,6 +39,11 @@ void Camera::ComputeViewRays(glm::uvec2 resolution,
       ray_buffer->push_back({position_, glm::normalize(ray_direction)});
     }
   }
+}
+
+void Camera::Rotate(float yaw, float pitch) {
+  yaw_ += yaw;
+  pitch_ += pitch;
 }
 
 }  // namespace rainbow

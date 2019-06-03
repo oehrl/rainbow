@@ -22,11 +22,12 @@ class Scene {
     aiMaterial* material;
   };
 
-  Scene(const std::string& filename);
+  Scene();
+
+  bool Load(const std::string& filename);
+  inline bool IsValid() const { return scene_ != nullptr; }
 
   std::optional<HitPoint> ShootRay(const Ray& ray) const;
-
-  inline bool IsValid() const { return scene_ != nullptr; }
 
  private:
   Assimp::Importer importer_;
