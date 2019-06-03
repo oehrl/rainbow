@@ -10,6 +10,7 @@ add_executable(rainbow
   src/main.cpp
   src/scene.cpp
   src/intersection.cpp
+  src/camera.cpp
 )
 
 target_include_directories(rainbow
