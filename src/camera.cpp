@@ -36,7 +36,7 @@ void Camera::ComputeViewRays(glm::uvec2 resolution,
       const auto ray_direction =
           x_normalized * right + y_normalized * up + forward;
 
-      ray_buffer->push_back({position_, ray_direction});
+      ray_buffer->push_back({position_, glm::normalize(ray_direction)});
     }
   }
 }
