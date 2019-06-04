@@ -155,7 +155,6 @@ void Application::Update(std::chrono::duration<float> elapsed_time) {
 
   float length = glm::length(move_vector);
   if (length > std::numeric_limits<float>::epsilon()) {
-    std::cout << "Length: " << length << std::endl;
     camera_.Move(move_vector * (elapsed_time.count() / length));
     redraw_preview_ = true;
   }
