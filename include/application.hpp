@@ -34,6 +34,8 @@ class Application final {
 
   std::chrono::steady_clock::time_point last_update_;
 
+  std::vector<glm::vec3> view_direction_buffer_;
+
   void ProcessEvent(const SDL_Event& event);
   void RenderPreview();
 

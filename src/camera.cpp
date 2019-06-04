@@ -8,12 +8,12 @@
 
 namespace rainbow {
 
-void Camera::ComputeViewRays(glm::uvec2 resolution,
-                             std::vector<Ray>* ray_buffer) const {
-  assert(ray_buffer != nullptr);
-  const auto ray_count = resolution.x * resolution.y;
-  ray_buffer->resize(0);
-  ray_buffer->reserve(ray_count);
+void Camera::ComputeViewDirections(
+    glm::uvec2 resolution, std::vector<glm::vec3>* direction_buffer) const {
+  assert(direction_buffer != nullptr);
+  const auto directions_count = resolution.x * resolution.y;
+  direction_buffer->resize(0);
+  direction_buffer->reserve(directions_count);
 
   // float horizontal_field_of_view;
   // float vertical_field_of_view;
@@ -36,7 +36,7 @@ void Camera::ComputeViewRays(glm::uvec2 resolution,
       const auto ray_direction =
           x_normalized * right + y_normalized * up + forward;
 
-      ray_buffer->push_back({position_, glm::normalize(ray_direction)});
+      direction_buffer->push_back(glm::normalize(ray_direction));
     }
   }
 }

@@ -13,15 +13,17 @@ namespace rainbow {
 
 class Camera {
  public:
-  void ComputeViewRays(glm::uvec2 resolution,
-                       std::vector<Ray>* ray_buffer) const;
-  inline std::vector<Ray> ComputeViewRays(glm::uvec2 resolution) const {
-    std::vector<Ray> rays;
-    ComputeViewRays(resolution, &rays);
-    return rays;
+  void ComputeViewDirections(glm::uvec2 resolution,
+                             std::vector<glm::vec3>* ray_buffer) const;
+  inline std::vector<glm::vec3> ComputeViewDirections(
+      glm::uvec2 resolution) const {
+    std::vector<glm::vec3> directions;
+    ComputeViewDirections(resolution, &directions);
+    return directions;
   }
 
   inline void Move(const glm::vec3& offset) { position_ += offset; }
+  inline glm::vec3 GetPosition() const { return position_; }
 
   void Rotate(float yaw, float pitch);
   void GetAxisVectors(glm::vec3* right, glm::vec3* up,

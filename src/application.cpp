@@ -92,15 +92,18 @@ void Application::RenderPreview() {
   int window_height;
   SDL_GetWindowSize(window_, &window_width, &window_height);
 
-  const auto view_rays =
-      camera_.ComputeViewRays(glm::uvec2{window_width, window_height});
+  RAINBOW_TIME_SECTION("Compute view rays") {
+    camera_.ComputeViewDirections(glm::uvec2{window_width, window_height},
+                                  &view_direction_buffer_);
+  };
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 0);
   SDL_RenderClear(renderer_);
 
   int x = 0;
   int y = window_height - 1;
-  for (const auto& view_ray : view_rays) {
-    const auto hitpoint = scene_.ShootRay(view_ray);
+  const auto camera_position = camera_.GetPosition();
+  for (const auto& view_ray : view_direction_buffer_) {
+    const auto hitpoint = scene_.ShootRay({camera_position, view_ray});
     if (hitpoint) {
       SDL_SetRenderDrawColor(renderer_, hitpoint->material->diffuse.r * 255,
                              hitpoint->material->diffuse.g * 255,
