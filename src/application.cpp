@@ -5,6 +5,8 @@
 
 #include <glm/geometric.hpp>
 
+#include "timing.hpp"
+
 namespace rainbow {
 
 Application::Application() {
@@ -84,6 +86,8 @@ void Application::ProcessEvent(const SDL_Event& event) {
 }
 
 void Application::RenderPreview() {
+  RAINBOW_TIME_FUNCTION();
+
   int window_width;
   int window_height;
   SDL_GetWindowSize(window_, &window_width, &window_height);
@@ -93,7 +97,6 @@ void Application::RenderPreview() {
   SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 0);
   SDL_RenderClear(renderer_);
 
-  const auto t0 = std::chrono::steady_clock::now();
   int x = 0;
   int y = window_height - 1;
   for (const auto& view_ray : view_rays) {
@@ -112,12 +115,6 @@ void Application::RenderPreview() {
     }
   }
   SDL_GL_SwapWindow(window_);
-
-  const auto t1 = std::chrono::steady_clock::now();
-  std::cout
-      << "RenderPreview(): "
-      << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count()
-      << "ms" << std::endl;
 }
 
 void Application::EnterInteractiveMode() {

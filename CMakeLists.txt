@@ -12,6 +12,7 @@ add_executable(rainbow
   src/intersection.cpp
   src/camera.cpp
   src/application.cpp
+  src/timing.cpp
 )
 
 target_include_directories(rainbow
