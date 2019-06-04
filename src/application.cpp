@@ -90,7 +90,7 @@ void Application::RenderPreview() {
 
   const auto view_rays =
       camera_.ComputeViewRays(glm::uvec2{window_width, window_height});
-  -SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 0);
+  SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 0);
   SDL_RenderClear(renderer_);
 
   const auto t0 = std::chrono::steady_clock::now();
