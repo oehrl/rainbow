@@ -102,10 +102,9 @@ void Application::RenderPreview() {
   for (const auto& view_ray : view_rays) {
     const auto hitpoint = scene_.ShootRay(view_ray);
     if (hitpoint) {
-      aiColor3D color;
-      hitpoint->material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-      SDL_SetRenderDrawColor(renderer_, color.r * 255, color.g * 255,
-                             color.b * 255, 255);
+      SDL_SetRenderDrawColor(renderer_, hitpoint->material->diffuse.r * 255,
+                             hitpoint->material->diffuse.g * 255,
+                             hitpoint->material->diffuse.b * 255, 255);
       SDL_RenderDrawPoint(renderer_, x, y);
     }
     ++x;
