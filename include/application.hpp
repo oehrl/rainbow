@@ -4,7 +4,9 @@
 
 #include <SDL2/SDL.h>
 #include "camera.hpp"
+#include "program.hpp"
 #include "scene.hpp"
+#include "texture.hpp"
 
 namespace rainbow {
 
@@ -27,6 +29,7 @@ class Application final {
   Camera camera_;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
+  SDL_GLContext opengl_context_;
 
   bool quit_application_ = false;
   bool interactive_mode_ = false;
@@ -35,6 +38,11 @@ class Application final {
   std::chrono::steady_clock::time_point last_update_;
 
   std::vector<glm::vec3> view_direction_buffer_;
+
+  std::unique_ptr<Program> view_ray_tracing_program_;
+  std::unique_ptr<Program> fullscreen_quad_program_;
+  std::unique_ptr<Texture2D> output_texture_;
+  GLuint vao_;
 
   void ProcessEvent(const SDL_Event& event);
   void RenderPreview();

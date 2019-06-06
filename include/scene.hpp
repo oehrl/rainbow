@@ -12,6 +12,7 @@
 #include <glm/vec3.hpp>
 
 #include "intersection.hpp"
+#include "opengl.hpp"
 
 namespace rainbow {
 
@@ -48,6 +49,10 @@ class Scene {
   std::vector<uint32_t> indices_;
   std::vector<Material> materials_;
   std::vector<Mesh> meshes_;
+
+  GLuint vertex_buffer_;
+  GLuint index_buffer_;
+  GLuint material_buffer_;
 };
 
 }  // namespace rainbow

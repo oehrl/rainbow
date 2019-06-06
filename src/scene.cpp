@@ -72,6 +72,23 @@ bool Scene::Load(const std::string& filename) {
     }
   };
 
+  RAINBOW_TIME_SECTION("Create OpenGL buffers") {
+    glGenBuffers(1, &vertex_buffer_);
+    glBindBuffer(vertex_buffer_, GL_ARRAY_BUFFER);
+    glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(glm::vec3),
+                 vertices_.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &index_buffer_);
+    glBindBuffer(index_buffer_, GL_ELEMENT_ARRAY_BUFFER);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(uint32_t),
+                 indices_.data(), GL_STATIC_DRAW);
+
+    glGenBuffers(1, &material_buffer_);
+    glBindBuffer(material_buffer_, GL_SHADER_STORAGE_BUFFER);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, vertices_.size() * sizeof(glm::vec3),
+                 vertices_.data(), GL_STATIC_DRAW);
+  };
+
   return scene_ != nullptr;
 }
 

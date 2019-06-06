@@ -5,18 +5,56 @@
 
 #include <glm/geometric.hpp>
 
+#include "shaders.hpp"
 #include "timing.hpp"
 
 namespace rainbow {
 
 Application::Application() {
-  if (SDL_CreateWindowAndRenderer(512, 512, 0, &window_, &renderer_) < 0) {
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  SDL_GL_SetAttribute(
+      SDL_GL_CONTEXT_FLAGS,
+      SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG | SDL_GL_CONTEXT_DEBUG_FLAG);
+
+  if (SDL_CreateWindowAndRenderer(512, 512, SDL_WINDOW_OPENGL, &window_,
+                                  &renderer_) < 0) {
     std::cerr << "Failed to create window!" << std::endl;
     throw std::runtime_error("Failed to create SDL window");
   }
+  opengl_context_ = SDL_GL_CreateContext(window_);
+
+  GLint gl_major_version;
+  glGetIntegerv(GL_MAJOR_VERSION, &gl_major_version);
+  GLint gl_minor_version;
+  glGetIntegerv(GL_MINOR_VERSION, &gl_minor_version);
+  std::cout << "Using OpenGL " << gl_major_version << "." << gl_minor_version
+            << std::endl;
+
+  view_ray_tracing_program_ = std::make_unique<Program>();
+  view_ray_tracing_program_->AttachShader(GL_COMPUTE_SHADER,
+                                          shaders::test_comp);
+  view_ray_tracing_program_->Link();
+
+  fullscreen_quad_program_ = std::make_unique<Program>();
+  fullscreen_quad_program_->AttachShader(GL_VERTEX_SHADER,
+                                         shaders::fullscreen_quad_vert);
+  fullscreen_quad_program_->AttachShader(GL_FRAGMENT_SHADER,
+                                         shaders::fullscreen_quad_frag);
+  fullscreen_quad_program_->Link();
+
+  Texture2DDescription output_texture_description;
+  output_texture_description.width = 512;
+  output_texture_description.height = 512;
+  output_texture_description.internal_format = GL_RGBA32F;
+  output_texture_ = std::make_unique<Texture2D>(output_texture_description);
+
+  glGenVertexArrays(1, &vao_);
 }
 
 Application::~Application() {
+  SDL_GL_DeleteContext(opengl_context_);
   SDL_DestroyRenderer(renderer_);
   SDL_DestroyWindow(window_);
 }
@@ -96,26 +134,40 @@ void Application::RenderPreview() {
     camera_.ComputeViewDirections(glm::uvec2{window_width, window_height},
                                   &view_direction_buffer_);
   };
-  SDL_SetRenderDrawColor(renderer_, 0, 0, 0, 0);
-  SDL_RenderClear(renderer_);
 
-  int x = 0;
-  int y = window_height - 1;
-  const auto camera_position = camera_.GetPosition();
-  for (const auto& view_ray : view_direction_buffer_) {
-    const auto hitpoint = scene_.ShootRay({camera_position, view_ray});
-    if (hitpoint) {
-      SDL_SetRenderDrawColor(renderer_, hitpoint->material->diffuse.r * 255,
-                             hitpoint->material->diffuse.g * 255,
-                             hitpoint->material->diffuse.b * 255, 255);
-      SDL_RenderDrawPoint(renderer_, x, y);
-    }
-    ++x;
-    if (x == window_width) {
-      x = 0;
-      --y;
-    }
-  }
+  view_ray_tracing_program_->Use();
+  output_texture_->BindImage(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+  glDispatchCompute(100, 100, 1);
+
+  glClearColor(0.0, 0.0, 0.0, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  fullscreen_quad_program_->Use();
+  glBindVertexArray(vao_);
+  output_texture_->Bind(GL_TEXTURE0);
+  glUniform1i(fullscreen_quad_program_->GetUniformLocation("u_TextureSampler"),
+              0);
+  glUniform2f(fullscreen_quad_program_->GetUniformLocation("u_ViewportSize"),
+              512.0f, 512.0f);
+  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+  // int x = 0;
+  // int y = window_height - 1;
+  // const auto camera_position = camera_.GetPosition();
+  // for (const auto& view_ray : view_direction_buffer_) {
+  //   const auto hitpoint = scene_.ShootRay({camera_position, view_ray});
+  //   if (hitpoint) {
+  //     SDL_SetRenderDrawColor(renderer_, hitpoint->material->diffuse.r * 255,
+  //                            hitpoint->material->diffuse.g * 255,
+  //                            hitpoint->material->diffuse.b * 255, 255);
+  //     SDL_RenderDrawPoint(renderer_, x, y);
+  //   }
+  //   ++x;
+  //   if (x == window_width) {
+  //     x = 0;
+  //     --y;
+  //   }
+  // }
   SDL_GL_SwapWindow(window_);
 }
 
