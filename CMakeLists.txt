@@ -25,6 +25,7 @@ add_executable(rainbow
   src/opengl.cpp
   src/program.cpp
   src/texture.cpp
+  src/buffer.cpp
 )
 
 add_dependencies(rainbow shaders)
