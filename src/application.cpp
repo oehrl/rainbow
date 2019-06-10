@@ -126,17 +126,37 @@ void Application::RenderPreview() {
   int window_height;
   SDL_GetWindowSize(window_, &window_width, &window_height);
 
-  RAINBOW_TIME_SECTION("Compute view rays") {
-    camera_.ComputeViewDirections(glm::uvec2{window_width, window_height},
-                                  &view_direction_buffer_);
-  };
+  // RAINBOW_TIME_SECTION("Compute view rays") {
+  //   camera_.ComputeViewDirections(glm::uvec2{window_width, window_height},
+  //                                 &view_direction_buffer_);
+  // };
+
+  glm::vec3 right;
+  glm::vec3 up;
+  glm::vec3 forward;
+  camera_.GetAxisVectors(&right, &up, &forward);
+  glm::vec3 camera_position = camera_.GetPosition();
 
   view_ray_tracing_program_->Use();
   output_texture_->BindImage(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-  glDispatchCompute(100, 100, 1);
+  scene_.GetMaterialBuffer()->BindToIndex(0);
+  scene_.GetVertexBuffer()->BindToIndex(1);
+  scene_.GetIndexBuffer()->BindToIndex(2);
+  scene_.GetMaterialIndexBuffer()->BindToIndex(3);
+  glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Right"), 1,
+               &right.x);
+  glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Up"), 1, &up.x);
+  glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Forward"), 1,
+               &forward.x);
+  glUniform3fv(
+      view_ray_tracing_program_->GetUniformLocation("u_CameraPosition"), 1,
+      &camera_position.x);
+  glUniform1ui(view_ray_tracing_program_->GetUniformLocation("u_TriangleCount"),
+               scene_.GetTriangleCount());
+  glDispatchCompute(512, 512, 1);
 
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  // Wait until writes to the images are finished
+  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
   fullscreen_quad_program_->Use();
   glBindVertexArray(vao_);
@@ -147,23 +167,6 @@ void Application::RenderPreview() {
               512.0f, 512.0f);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-  // int x = 0;
-  // int y = window_height - 1;
-  // const auto camera_position = camera_.GetPosition();
-  // for (const auto& view_ray : view_direction_buffer_) {
-  //   const auto hitpoint = scene_.ShootRay({camera_position, view_ray});
-  //   if (hitpoint) {
-  //     SDL_SetRenderDrawColor(renderer_, hitpoint->material->diffuse.r * 255,
-  //                            hitpoint->material->diffuse.g * 255,
-  //                            hitpoint->material->diffuse.b * 255, 255);
-  //     SDL_RenderDrawPoint(renderer_, x, y);
-  //   }
-  //   ++x;
-  //   if (x == window_width) {
-  //     x = 0;
-  //     --y;
-  //   }
-  // }
   SDL_GL_SwapWindow(window_);
 }
 

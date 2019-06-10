@@ -17,8 +17,8 @@ inline glm::vec3 ConvertAssimpVectorToGLM(const aiVector3D& vector) {
   return {vector.x, vector.y, vector.z};
 }
 
-inline glm::vec3 ConvertAssimpColorToGLM(const aiColor3D& color) {
-  return {color.r, color.g, color.b};
+inline glm::vec4 ConvertAssimpColorToGLM(const aiColor4D& color) {
+  return {color.r, color.g, color.b, color.a};
 }
 
 }  // namespace
@@ -39,7 +39,7 @@ bool Scene::Load(const std::string& filename) {
     materials_.reserve(scene_->mNumMaterials);
     for (unsigned int i = 0; i < scene_->mNumMaterials; ++i) {
       const auto& material = scene_->mMaterials[i];
-      aiColor3D color;
+      aiColor4D color;
       material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
       materials_.push_back({ConvertAssimpColorToGLM(color)});
     }
@@ -56,7 +56,7 @@ bool Scene::Load(const std::string& filename) {
       material_indices_.reserve(material_indices_.size() + mesh->mNumFaces);
 
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
-        vertices_.push_back(ConvertAssimpVectorToGLM(mesh->mVertices[j]));
+        vertices_.push_back({ConvertAssimpVectorToGLM(mesh->mVertices[j])});
       }
 
       for (unsigned int j = 0; j < mesh->mNumFaces; ++j) {
@@ -76,11 +76,11 @@ bool Scene::Load(const std::string& filename) {
   RAINBOW_TIME_SECTION("Create OpenGL buffers") {
     ShaderStorageBufferDescription desc;
 
-    desc.size = materials_.size() * sizeof(glm::vec3);
+    desc.size = materials_.size() * sizeof(Material);
     material_buffer_ =
         std::make_unique<ShaderStorageBuffer>(desc, materials_.data());
 
-    desc.size = vertices_.size() * sizeof(glm::vec3);
+    desc.size = vertices_.size() * sizeof(Vertex);
     vertex_buffer_ =
         std::make_unique<ShaderStorageBuffer>(desc, vertices_.data());
 
@@ -104,10 +104,10 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
   assert(indices_.size() % 3 == 0);
   const uint32_t triangle_count = indices_.size() / 3;
   for (uint32_t i = 0; i < triangle_count; ++i) {
-    Triangle triangle{
-        vertices_[indices_[i * 3 + 0]],
-        vertices_[indices_[i * 3 + 1]],
-        vertices_[indices_[i * 3 + 2]],
+    rainbow::Triangle triangle{
+        vertices_[indices_[i * 3 + 0]].position,
+        vertices_[indices_[i * 3 + 1]].position,
+        vertices_[indices_[i * 3 + 2]].position,
     };
 
     const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
