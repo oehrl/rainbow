@@ -31,10 +31,10 @@ bool Scene::Load(const std::string& filename) {
                                 aiProcess_Triangulate | aiProcess_GenNormals);
   };
   RAINBOW_TIME_SECTION("ConvertData") {
-    meshes_.resize(0);
     materials_.resize(0);
     vertices_.resize(0);
     indices_.resize(0);
+    material_indices_.resize(0);
 
     materials_.reserve(scene_->mNumMaterials);
     for (unsigned int i = 0; i < scene_->mNumMaterials; ++i) {
@@ -44,7 +44,6 @@ bool Scene::Load(const std::string& filename) {
       materials_.push_back({ConvertAssimpColorToGLM(color)});
     }
 
-    meshes_.reserve(scene_->mNumMeshes);
     for (unsigned int i = 0; i < scene_->mNumMeshes; ++i) {
       const auto mesh = scene_->mMeshes[i];
 
@@ -54,6 +53,7 @@ bool Scene::Load(const std::string& filename) {
 
       vertices_.reserve(vertices_.size() + mesh->mNumVertices);
       indices_.reserve(indices_.size() + mesh->mNumFaces * 3);
+      material_indices_.reserve(material_indices_.size() + mesh->mNumFaces);
 
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
         vertices_.push_back(ConvertAssimpVectorToGLM(mesh->mVertices[j]));
@@ -68,25 +68,29 @@ bool Scene::Load(const std::string& filename) {
         }
       }
 
-      meshes_.push_back({base_index, triangle_count, mesh->mMaterialIndex});
+      material_indices_.insert(material_indices_.end(), mesh->mNumFaces,
+                               mesh->mMaterialIndex);
     }
   };
 
   RAINBOW_TIME_SECTION("Create OpenGL buffers") {
-    glGenBuffers(1, &vertex_buffer_);
-    glBindBuffer(vertex_buffer_, GL_ARRAY_BUFFER);
-    glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(glm::vec3),
-                 vertices_.data(), GL_STATIC_DRAW);
+    ShaderStorageBufferDescription desc;
 
-    glGenBuffers(1, &index_buffer_);
-    glBindBuffer(index_buffer_, GL_ELEMENT_ARRAY_BUFFER);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(uint32_t),
-                 indices_.data(), GL_STATIC_DRAW);
+    desc.size = materials_.size() * sizeof(glm::vec3);
+    material_buffer_ =
+        std::make_unique<ShaderStorageBuffer>(desc, materials_.data());
 
-    glGenBuffers(1, &material_buffer_);
-    glBindBuffer(material_buffer_, GL_SHADER_STORAGE_BUFFER);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, vertices_.size() * sizeof(glm::vec3),
-                 vertices_.data(), GL_STATIC_DRAW);
+    desc.size = vertices_.size() * sizeof(glm::vec3);
+    vertex_buffer_ =
+        std::make_unique<ShaderStorageBuffer>(desc, vertices_.data());
+
+    desc.size = indices_.size() * sizeof(uint32_t);
+    index_buffer_ =
+        std::make_unique<ShaderStorageBuffer>(desc, indices_.data());
+
+    desc.size = material_indices_.size() * sizeof(uint32_t);
+    material_index_buffer_ =
+        std::make_unique<ShaderStorageBuffer>(desc, material_indices_.data());
   };
 
   return scene_ != nullptr;
@@ -97,21 +101,21 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
 
   std::optional<HitPoint> hitpoint;
 
-  for (const auto& mesh : meshes_) {
-    for (uint32_t i = 0; i < mesh.triangle_count; ++i) {
-      Triangle triangle{
-          vertices_[indices_[mesh.index_offset + i * 3 + 0]],
-          vertices_[indices_[mesh.index_offset + i * 3 + 1]],
-          vertices_[indices_[mesh.index_offset + i * 3 + 2]],
-      };
+  assert(indices_.size() % 3 == 0);
+  const uint32_t triangle_count = indices_.size() / 3;
+  for (uint32_t i = 0; i < triangle_count; ++i) {
+    Triangle triangle{
+        vertices_[indices_[i * 3 + 0]],
+        vertices_[indices_[i * 3 + 1]],
+        vertices_[indices_[i * 3 + 2]],
+    };
 
-      const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
-      if (intersection && intersection->distance >= 0.0f &&
-          (!hitpoint || hitpoint->distance > intersection->distance)) {
-        hitpoint =
-            HitPoint{intersection->distance, intersection->intersection_point,
-                     glm::vec3{}, &materials_[mesh.material_index]};
-      }
+    const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
+    if (intersection && intersection->distance >= 0.0f &&
+        (!hitpoint || hitpoint->distance > intersection->distance)) {
+      hitpoint =
+          HitPoint{intersection->distance, intersection->intersection_point,
+                   glm::vec3{}, &materials_[material_indices_[i]]};
     }
   }
 
