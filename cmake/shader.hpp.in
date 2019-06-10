@@ -1,0 +1,9 @@
+#pragma once
+
+namespace rainbow {
+namespace shaders {
+
+static const char* @SHADER_NAME@_@SHADER_EXTENSION@ = "@SHADER_SOURCE@";
+
+}  // namespace shaders
+}  // namespace rainbow
