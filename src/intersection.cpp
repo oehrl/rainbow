@@ -60,8 +60,7 @@ bool CheckForTriangleAxisAlignedBoundingBoxIntersection(
   for (int i = 0; i < 8; ++i) {
     glm::vec3 f((i / 4) % 2 == 0 ? 1 : -1, (i / 2) % 2 == 0 ? 1 : -1,
                 i % 2 == 0 ? 1 : -1);
-    box_vertices[i] =
-        aabb.CalculateCenter() + 0.5f * f * aabb.CalculateExtend();
+    box_vertices[i] = CalculateCenter(aabb) + 0.5f * f * CalculateExtend(aabb);
   }
   glm::vec3 normal = glm::cross(triangle.vertices[1] - triangle.vertices[0],
                                 triangle.vertices[2] - triangle.vertices[0]);

@@ -57,8 +57,8 @@ void Octree::InsertTriangle(OctreeCell* node,
 void Octree::SplitCell(OctreeCell* cell) {
   assert(cell != nullptr);
   assert(cell->children.size() == 0);
-  const glm::vec3 center = cell->aabb.CalculateCenter();
-  const glm::vec3 children_extend = cell->aabb.CalculateExtend() * 0.5f;
+  const glm::vec3 center = CalculateCenter(cell->aabb);
+  const glm::vec3 children_extend = CalculateExtend(cell->aabb) * 0.5f;
   const glm::vec3 children_half_extend = children_extend * 0.5f;
   const glm::vec3 directions[8] = {glm::vec3(1, 1, 1),   glm::vec3(-1, 1, 1),
                                    glm::vec3(1, -1, 1),  glm::vec3(-1, -1, 1),
