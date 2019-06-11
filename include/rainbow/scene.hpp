@@ -12,9 +12,9 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "buffer.hpp"
-#include "intersection.hpp"
-#include "opengl.hpp"
+#include "rainbow/backends/opengl/buffer.hpp"
+#include "rainbow/backends/opengl/opengl.hpp"
+#include "rainbow/intersection.hpp"
 
 namespace rainbow {
 
@@ -90,4 +90,4 @@ class Scene {
 
 }  // namespace rainbow
 
-#include "octree.hpp"
+#include "rainbow/octree.hpp"

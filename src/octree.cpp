@@ -1,4 +1,4 @@
-#include "octree.hpp"
+#include "rainbow/octree.hpp"
 #include <cmath>
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>

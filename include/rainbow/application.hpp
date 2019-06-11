@@ -3,10 +3,10 @@
 #include <chrono>
 
 #include <SDL2/SDL.h>
-#include "camera.hpp"
-#include "program.hpp"
-#include "scene.hpp"
-#include "texture.hpp"
+#include "rainbow/backends/opengl/program.hpp"
+#include "rainbow/backends/opengl/texture.hpp"
+#include "rainbow/camera.hpp"
+#include "rainbow/scene.hpp"
 
 namespace rainbow {
 

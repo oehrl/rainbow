@@ -1,6 +1,6 @@
 #pragma once
 
-#include "opengl.hpp"
+#include "rainbow/backends/opengl/opengl.hpp"
 
 namespace rainbow {
 

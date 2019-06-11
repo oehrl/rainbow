@@ -2,7 +2,7 @@
 
 #include <cassert>
 #include <string_view>
-#include "opengl.hpp"
+#include "rainbow/backends/opengl/opengl.hpp"
 
 namespace rainbow {
 

@@ -22,11 +22,12 @@ add_executable(rainbow
   src/camera.cpp
   src/application.cpp
   src/timing.cpp
-  src/opengl.cpp
-  src/program.cpp
-  src/texture.cpp
-  src/buffer.cpp
   src/octree.cpp
+
+  src/backends/opengl/opengl.cpp
+  src/backends/opengl/program.cpp
+  src/backends/opengl/texture.cpp
+  src/backends/opengl/buffer.cpp
 )
 
 add_dependencies(rainbow shaders)

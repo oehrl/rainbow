@@ -1,4 +1,4 @@
-#include "scene.hpp"
+#include "rainbow/scene.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -7,8 +7,8 @@
 #include <assimp/postprocess.h>
 #include <glm/gtx/string_cast.hpp>
 
-#include "octree.hpp"
-#include "timing.hpp"
+#include "rainbow/octree.hpp"
+#include "rainbow/timing.hpp"
 
 namespace rainbow {
 
@@ -28,8 +28,11 @@ Scene::Scene() : scene_{nullptr} {}
 
 bool Scene::Load(const std::string& filename) {
   RAINBOW_TIME_SECTION("ReadFile()") {
-    scene_ = importer_.ReadFile(filename,
-                                aiProcess_Triangulate | aiProcess_GenNormals);
+    importer_.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
+                                 aiPrimitiveType_POINT | aiPrimitiveType_LINE);
+    scene_ = importer_.ReadFile(filename, aiProcess_Triangulate |
+                                              aiProcess_GenNormals |
+                                              aiProcess_SortByPType);
   };
   RAINBOW_TIME_SECTION("ConvertData") {
     materials_.resize(0);

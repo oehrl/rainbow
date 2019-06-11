@@ -1,4 +1,4 @@
-#include "buffer.hpp"
+#include "rainbow/backends/opengl/buffer.hpp"
 
 namespace rainbow {
 

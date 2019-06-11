@@ -1,12 +1,12 @@
-#include "application.hpp"
+#include "rainbow/application.hpp"
 
 #include <chrono>
 #include <iostream>
 
 #include <glm/geometric.hpp>
 
+#include "rainbow/timing.hpp"
 #include "shaders.hpp"
-#include "timing.hpp"
 
 namespace rainbow {
 

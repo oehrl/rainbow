@@ -1,4 +1,4 @@
-#include "texture.hpp"
+#include "rainbow/backends/opengl/texture.hpp"
 #include <cassert>
 
 namespace rainbow {
