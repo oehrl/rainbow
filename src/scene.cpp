@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 #include <glm/gtx/string_cast.hpp>
 
+#include "octree.hpp"
 #include "timing.hpp"
 
 namespace rainbow {
@@ -72,6 +73,17 @@ bool Scene::Load(const std::string& filename) {
                                mesh->mMaterialIndex);
     }
   };
+
+  RAINBOW_TIME_SECTION("Compute octree") {
+    octree_ =
+        std::make_unique<Octree>(vertices_.data(), vertices_.size(), 6, 200);
+    for (uint32_t i = 0; i < GetTriangleCount(); ++i) {
+      octree_->InsertTriangle(indices_[i * 3 + 0], indices_[i * 3 + 1],
+                              indices_[i * 3 + 2]);
+    }
+  };
+  std::cout << "Total number of triangles: " << GetTriangleCount() << std::endl;
+  octree_->Print();
 
   RAINBOW_TIME_SECTION("Create OpenGL buffers") {
     ShaderStorageBufferDescription desc;

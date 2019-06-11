@@ -18,6 +18,8 @@
 
 namespace rainbow {
 
+class Octree;
+
 class Scene {
  public:
   struct Material {
@@ -75,6 +77,7 @@ class Scene {
   std::vector<Vertex> vertices_;
   std::vector<uint32_t> indices_;
   std::vector<uint32_t> material_indices_;
+  std::unique_ptr<Octree> octree_;
 
   std::unique_ptr<ShaderStorageBuffer> material_buffer_;
   std::unique_ptr<ShaderStorageBuffer> vertex_buffer_;
@@ -83,3 +86,5 @@ class Scene {
 };
 
 }  // namespace rainbow
+
+#include "octree.hpp"
