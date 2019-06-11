@@ -1,0 +1,135 @@
+#include "octree.hpp"
+#include <cmath>
+#include <glm/gtx/string_cast.hpp>
+#include <iostream>
+#include <limits>
+
+namespace rainbow {
+
+Octree::Octree(const Scene::Vertex* vertices, size_t vertex_count,
+               size_t max_depth, size_t triangles_per_cell)
+    : vertices_(vertices),
+      vertex_count_(vertex_count),
+      max_depth_(max_depth),
+      triangles_per_cell_(triangles_per_cell) {
+  root_.depth = 0;
+  root_.aabb.min = glm::vec3(std::numeric_limits<float>::infinity());
+  root_.aabb.max = glm::vec3(-std::numeric_limits<float>::infinity());
+
+  for (size_t i = 0; i < vertex_count; ++i) {
+    root_.aabb.min.x = std::min(root_.aabb.min.x, vertices[i].position.x);
+    root_.aabb.min.y = std::min(root_.aabb.min.y, vertices[i].position.y);
+    root_.aabb.min.z = std::min(root_.aabb.min.z, vertices[i].position.z);
+    root_.aabb.max.x = std::max(root_.aabb.max.x, vertices[i].position.x);
+    root_.aabb.max.y = std::max(root_.aabb.max.y, vertices[i].position.y);
+    root_.aabb.max.z = std::max(root_.aabb.max.z, vertices[i].position.z);
+  }
+}
+
+void Octree::InsertTriangle(uint32_t i0, uint32_t i1, uint32_t i2) {
+  const auto triangle_count_before = GetNumberOfTrianglesInChildren(&root_);
+  TriangleIndices triangle_indices{i0, i1, i2};
+  Triangle triangle = GetTriangleFromTriangleIndices(triangle_indices);
+  InsertTriangle(&root_, triangle_indices, triangle);
+  const auto triangle_count_after = GetNumberOfTrianglesInChildren(&root_);
+  assert(triangle_count_after > triangle_count_before);
+}
+
+void Octree::Print() const { PrintCell(&root_); }
+
+void Octree::InsertTriangle(OctreeCell* node,
+                            const TriangleIndices& triangle_indices,
+                            const Triangle& triangle) {
+  assert(node != nullptr);
+  if (node->children.size() > 0) {
+    for (auto& child : node->children) {
+      InsertTriangle(&child, triangle_indices, triangle);
+    }
+  } else {
+    if (CheckForTriangleAxisAlignedBoundingBoxIntersection(triangle,
+                                                           node->aabb)) {
+      node->triangle_indices.push_back(triangle_indices);
+      if (node->triangle_indices.size() > triangles_per_cell_ &&
+          node->depth < max_depth_) {
+        SplitCell(node);
+      }
+    }
+  }
+}
+
+void Octree::SplitCell(OctreeCell* cell) {
+  assert(cell != nullptr);
+  assert(cell->children.size() == 0);
+  const glm::vec3 center = cell->aabb.CalculateCenter();
+  const glm::vec3 children_extend = cell->aabb.CalculateExtend() * 0.5f;
+  const glm::vec3 children_half_extend = children_extend * 0.5f;
+  const glm::vec3 directions[8] = {glm::vec3(1, 1, 1),   glm::vec3(-1, 1, 1),
+                                   glm::vec3(1, -1, 1),  glm::vec3(-1, -1, 1),
+                                   glm::vec3(1, 1, -1),  glm::vec3(-1, 1, -1),
+                                   glm::vec3(1, -1, -1), glm::vec3(-1, -1, -1)};
+  cell->children.reserve(8);
+  for (const auto& direction : directions) {
+    const glm::vec3 child_center = center + children_half_extend * direction;
+
+    auto& child = cell->children.emplace_back();
+    child.depth = cell->depth + 1;
+    child.aabb.min = child_center - children_half_extend;
+    child.aabb.max = child_center + children_half_extend;
+    for (const auto& triangle_indices : cell->triangle_indices) {
+      InsertTriangle(&child, triangle_indices,
+                     GetTriangleFromTriangleIndices(triangle_indices));
+    }
+  }
+  cell->triangle_indices.clear();
+}
+
+Triangle Octree::GetTriangleFromTriangleIndices(
+    const TriangleIndices& triangle_indices) {
+  return {vertices_[triangle_indices.indices[0]].position,
+          vertices_[triangle_indices.indices[1]].position,
+          vertices_[triangle_indices.indices[2]].position};
+}
+
+void Octree::PrintCell(const OctreeCell* cell) const {
+  auto indent = [](int n) {
+    for (int i = 0; i < n; ++i) {
+      std::cout << " ";
+    }
+  };
+
+  indent(cell->depth);
+  std::cout << "[" << glm::to_string(cell->aabb.min) << "-"
+            << glm::to_string(cell->aabb.max)
+            << "]: " << cell->triangle_indices.size() << std::endl;
+
+  if (cell->children.size() == 0) {
+    for (const auto& triangle : cell->triangle_indices) {
+      // indent(cell->depth + 1);
+      // std::cout << "["
+      //           << glm::to_string(vertices_[triangle.indices[0]].position)
+      //           << ","
+      //           << glm::to_string(vertices_[triangle.indices[1]].position)
+      //           << ","
+      //           << glm::to_string(vertices_[triangle.indices[2]].position)
+      //           << "]" << std::endl;
+    }
+  } else {
+    for (const auto& child : cell->children) {
+      PrintCell(&child);
+    }
+  }
+}
+
+size_t Octree::GetNumberOfTrianglesInChildren(const OctreeCell* cell) const {
+  if (cell->children.size() > 0) {
+    size_t triangle_count = 0;
+    for (const auto& child : cell->children) {
+      triangle_count += GetNumberOfTrianglesInChildren(&child);
+    }
+    return triangle_count;
+  } else {
+    return cell->triangle_indices.size();
+  }
+}
+
+}  // namespace rainbow
