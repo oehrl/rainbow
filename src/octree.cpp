@@ -26,29 +26,28 @@ Octree::Octree(const Scene::Vertex* vertices, size_t vertex_count,
   }
 }
 
-void Octree::InsertTriangle(uint32_t i0, uint32_t i1, uint32_t i2) {
-  TriangleIndices triangle_indices{i0, i1, i2};
+void Octree::InsertTriangle(const Scene::Triangle& triangle_indices) {
   Triangle triangle = GetTriangleFromTriangleIndices(triangle_indices);
   InsertTriangle(&root_, triangle_indices, triangle);
 }
 
 void Octree::Print() const { PrintCell(&root_); }
 
-void Octree::InsertTriangle(OctreeCell* node,
-                            const TriangleIndices& triangle_indices,
+void Octree::InsertTriangle(OctreeCell* cell,
+                            const Scene::Triangle& triangle_indices,
                             const Triangle& triangle) {
-  assert(node != nullptr);
-  if (node->children.size() > 0) {
-    for (auto& child : node->children) {
+  assert(cell != nullptr);
+  if (cell->children.size() > 0) {
+    for (auto& child : cell->children) {
       InsertTriangle(&child, triangle_indices, triangle);
     }
   } else {
     if (CheckForTriangleAxisAlignedBoundingBoxIntersection(triangle,
-                                                           node->aabb)) {
-      node->triangle_indices.push_back(triangle_indices);
-      if (node->triangle_indices.size() > triangles_per_cell_ &&
-          node->depth < max_depth_) {
-        SplitCell(node);
+                                                           cell->aabb)) {
+      cell->triangles.push_back(triangle_indices);
+      if (cell->triangles.size() > triangles_per_cell_ &&
+          cell->depth < max_depth_) {
+        SplitCell(cell);
       }
     }
   }
@@ -72,19 +71,19 @@ void Octree::SplitCell(OctreeCell* cell) {
     child.depth = cell->depth + 1;
     child.aabb.min = child_center - children_half_extend;
     child.aabb.max = child_center + children_half_extend;
-    for (const auto& triangle_indices : cell->triangle_indices) {
+    for (const auto& triangle_indices : cell->triangles) {
       InsertTriangle(&child, triangle_indices,
                      GetTriangleFromTriangleIndices(triangle_indices));
     }
   }
-  cell->triangle_indices.clear();
+  cell->triangles.clear();
 }
 
 Triangle Octree::GetTriangleFromTriangleIndices(
-    const TriangleIndices& triangle_indices) {
-  return {vertices_[triangle_indices.indices[0]].position,
-          vertices_[triangle_indices.indices[1]].position,
-          vertices_[triangle_indices.indices[2]].position};
+    const Scene::Triangle& triangle_indices) {
+  return {vertices_[triangle_indices.vertex_indices[0]].position,
+          vertices_[triangle_indices.vertex_indices[1]].position,
+          vertices_[triangle_indices.vertex_indices[2]].position};
 }
 
 void Octree::PrintCell(const OctreeCell* cell) const {
@@ -96,11 +95,11 @@ void Octree::PrintCell(const OctreeCell* cell) const {
 
   indent(cell->depth);
   std::cout << "[" << glm::to_string(cell->aabb.min) << "-"
-            << glm::to_string(cell->aabb.max)
-            << "]: " << cell->triangle_indices.size() << std::endl;
+            << glm::to_string(cell->aabb.max) << "]: " << cell->triangles.size()
+            << std::endl;
 
   if (cell->children.size() == 0) {
-    for (const auto& triangle : cell->triangle_indices) {
+    for (const auto& triangle : cell->triangles) {
       // indent(cell->depth + 1);
       // std::cout << "["
       //           << glm::to_string(vertices_[triangle.indices[0]].position)
@@ -125,7 +124,7 @@ size_t Octree::GetNumberOfTrianglesInChildren(const OctreeCell* cell) const {
     }
     return triangle_count;
   } else {
-    return cell->triangle_indices.size();
+    return cell->triangles.size();
   }
 }
 

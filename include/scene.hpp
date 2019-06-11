@@ -37,6 +37,7 @@ class Scene {
     glm::uvec3 vertex_indices;
     uint32_t material_index;
   };
+  static_assert(sizeof(Triangle) == sizeof(uint32_t) * 4);
 
   struct HitPoint {
     float distance;
@@ -59,15 +60,19 @@ class Scene {
     return vertex_buffer_.get();
   }
 
-  inline ShaderStorageBuffer* GetIndexBuffer() const {
-    return index_buffer_.get();
+  inline ShaderStorageBuffer* GetTriangleBuffer() const {
+    return triangle_buffer_.get();
   }
 
-  inline ShaderStorageBuffer* GetMaterialIndexBuffer() const {
-    return material_index_buffer_.get();
-  }
+  inline uint32_t GetTriangleCount() const { return triangles_.size(); }
 
-  inline uint32_t GetTriangleCount() const { return indices_.size() / 3; }
+  inline rainbow::Triangle GetTriangle(const Scene::Triangle& triangle) const {
+    return {
+        vertices_[triangle.vertex_indices[0]].position,
+        vertices_[triangle.vertex_indices[1]].position,
+        vertices_[triangle.vertex_indices[2]].position,
+    };
+  }
 
  private:
   Assimp::Importer importer_;
@@ -75,14 +80,12 @@ class Scene {
 
   std::vector<Material> materials_;
   std::vector<Vertex> vertices_;
-  std::vector<uint32_t> indices_;
-  std::vector<uint32_t> material_indices_;
+  std::vector<Triangle> triangles_;
   std::unique_ptr<Octree> octree_;
 
   std::unique_ptr<ShaderStorageBuffer> material_buffer_;
   std::unique_ptr<ShaderStorageBuffer> vertex_buffer_;
-  std::unique_ptr<ShaderStorageBuffer> index_buffer_;
-  std::unique_ptr<ShaderStorageBuffer> material_index_buffer_;
+  std::unique_ptr<ShaderStorageBuffer> triangle_buffer_;
 };
 
 }  // namespace rainbow

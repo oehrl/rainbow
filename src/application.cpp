@@ -141,8 +141,7 @@ void Application::RenderPreview() {
   output_texture_->BindImage(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
   scene_.GetMaterialBuffer()->BindToIndex(0);
   scene_.GetVertexBuffer()->BindToIndex(1);
-  scene_.GetIndexBuffer()->BindToIndex(2);
-  scene_.GetMaterialIndexBuffer()->BindToIndex(3);
+  scene_.GetTriangleBuffer()->BindToIndex(2);
   glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Right"), 1,
                &right.x);
   glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Up"), 1, &up.x);
