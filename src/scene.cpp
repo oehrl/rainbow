@@ -7,6 +7,7 @@
 #include <assimp/postprocess.h>
 #include <glm/gtx/string_cast.hpp>
 
+#include "octree.hpp"
 #include "timing.hpp"
 
 namespace rainbow {
@@ -33,8 +34,7 @@ bool Scene::Load(const std::string& filename) {
   RAINBOW_TIME_SECTION("ConvertData") {
     materials_.resize(0);
     vertices_.resize(0);
-    indices_.resize(0);
-    material_indices_.resize(0);
+    triangles_.resize(0);
 
     materials_.reserve(scene_->mNumMaterials);
     for (unsigned int i = 0; i < scene_->mNumMaterials; ++i) {
@@ -48,12 +48,11 @@ bool Scene::Load(const std::string& filename) {
       const auto mesh = scene_->mMeshes[i];
 
       const uint32_t base_vertex = vertices_.size();
-      const uint32_t base_index = indices_.size();
+      const uint32_t base_index = triangles_.size() * 3;
       const uint32_t triangle_count = mesh->mNumFaces;
 
       vertices_.reserve(vertices_.size() + mesh->mNumVertices);
-      indices_.reserve(indices_.size() + mesh->mNumFaces * 3);
-      material_indices_.reserve(material_indices_.size() + mesh->mNumFaces);
+      triangles_.reserve(triangles_.size() + mesh->mNumFaces);
 
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
         vertices_.push_back({ConvertAssimpVectorToGLM(mesh->mVertices[j])});
@@ -63,15 +62,26 @@ bool Scene::Load(const std::string& filename) {
         const auto& face = mesh->mFaces[j];
         assert(face.mNumIndices == 3);
 
-        for (int k = 0; k < 3; ++k) {
-          indices_.push_back(base_vertex + face.mIndices[k]);
-        }
+        triangles_.push_back({{
+                                  base_vertex + face.mIndices[0],
+                                  base_vertex + face.mIndices[1],
+                                  base_vertex + face.mIndices[2],
+                              },
+                              mesh->mMaterialIndex});
       }
-
-      material_indices_.insert(material_indices_.end(), mesh->mNumFaces,
-                               mesh->mMaterialIndex);
     }
   };
+
+  RAINBOW_TIME_SECTION("Compute octree") {
+    octree_ =
+        std::make_unique<Octree>(vertices_.data(), vertices_.size(), 6, 200);
+    for (const auto& triangle : triangles_) {
+      octree_->InsertTriangle(triangle);
+    }
+    octree_->Build();
+  };
+  std::cout << "Total number of triangles: " << GetTriangleCount() << std::endl;
+  octree_->Print();
 
   RAINBOW_TIME_SECTION("Create OpenGL buffers") {
     ShaderStorageBufferDescription desc;
@@ -84,13 +94,9 @@ bool Scene::Load(const std::string& filename) {
     vertex_buffer_ =
         std::make_unique<ShaderStorageBuffer>(desc, vertices_.data());
 
-    desc.size = indices_.size() * sizeof(uint32_t);
-    index_buffer_ =
-        std::make_unique<ShaderStorageBuffer>(desc, indices_.data());
-
-    desc.size = material_indices_.size() * sizeof(uint32_t);
-    material_index_buffer_ =
-        std::make_unique<ShaderStorageBuffer>(desc, material_indices_.data());
+    desc.size = triangles_.size() * sizeof(Scene::Triangle);
+    triangle_buffer_ =
+        std::make_unique<ShaderStorageBuffer>(desc, triangles_.data());
   };
 
   return scene_ != nullptr;
@@ -101,21 +107,14 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
 
   std::optional<HitPoint> hitpoint;
 
-  assert(indices_.size() % 3 == 0);
-  const uint32_t triangle_count = indices_.size() / 3;
-  for (uint32_t i = 0; i < triangle_count; ++i) {
-    rainbow::Triangle triangle{
-        vertices_[indices_[i * 3 + 0]].position,
-        vertices_[indices_[i * 3 + 1]].position,
-        vertices_[indices_[i * 3 + 2]].position,
-    };
-
-    const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
+  for (const auto& triangle : triangles_) {
+    const auto intersection =
+        ComputeRayTriangleIntersection(ray, GetTriangle(triangle));
     if (intersection && intersection->distance >= 0.0f &&
         (!hitpoint || hitpoint->distance > intersection->distance)) {
       hitpoint =
           HitPoint{intersection->distance, intersection->intersection_point,
-                   glm::vec3{}, &materials_[material_indices_[i]]};
+                   glm::vec3{}, &materials_[triangle.material_index]};
     }
   }
 

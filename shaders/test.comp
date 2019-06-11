@@ -1,5 +1,12 @@
 #version 430
 
+struct Triangle {
+  uint index0;
+  uint index1;
+  uint index2;
+  uint material_index;
+};
+
 layout(local_size_x = 1, local_size_y = 1) in;
 layout(rgba32f, binding = 0) uniform image2D u_OutputImage;
 
@@ -11,12 +18,8 @@ layout(std430, binding = 1) buffer vertex_buffer {
   vec3 vertices[];
 };
 
-layout(std430, binding = 2) buffer index_buffer {
-  uint indices[];
-};
-
-layout(std430, binding = 3) buffer material_index_buffer {
-  uint material_indices[];
+layout(std430, binding = 2) buffer triangle_buffer {
+  Triangle triangles[];
 };
 
 uniform vec3 u_Right;
@@ -65,13 +68,13 @@ void main() {
     vec3 barycentric_coordinates;
     vec3 triangle_normal;
     if (IntersectTriangle(u_CameraPosition, view_direction,
-          vertices[indices[i * 3 + 0]],
-          vertices[indices[i * 3 + 1]],
-          vertices[indices[i * 3 + 2]],
+          vertices[triangles[i].index0],
+          vertices[triangles[i].index1],
+          vertices[triangles[i].index2],
           hit, barycentric_coordinates, triangle_normal) &&
         hit < closest_hit) {
       closest_hit = hit;
-      pixel.xyz = materials[material_indices[i]];
+      pixel.xyz = materials[triangles[i].material_index];
     }
   }
   
