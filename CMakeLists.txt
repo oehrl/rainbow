@@ -46,7 +46,7 @@ target_include_directories(rainbow
 )
 
 target_link_libraries(rainbow
-  PRIVATE assimp glm SDL2 OpenGL
+  PRIVATE assimp glm SDL2 OpenGL::GL
 )
 
 if (APPLE)
