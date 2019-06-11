@@ -78,6 +78,7 @@ bool Scene::Load(const std::string& filename) {
     for (const auto& triangle : triangles_) {
       octree_->InsertTriangle(triangle);
     }
+    octree_->Build();
   };
   std::cout << "Total number of triangles: " << GetTriangleCount() << std::endl;
   octree_->Print();

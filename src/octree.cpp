@@ -3,6 +3,7 @@
 #include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include <limits>
+#include <map>
 
 namespace rainbow {
 
@@ -51,6 +52,46 @@ void Octree::InsertTriangle(OctreeCell* cell,
       }
     }
   }
+}
+
+void Octree::Build() {
+  data_.resize(0);
+  triangles_.resize(0);
+
+  uint32_t cell_count = 0;
+  uint32_t triangle_count = 0;
+  std::map<const OctreeCell*, int32_t> cell_ids;
+  Traverse([&cell_count, &triangle_count, &cell_ids](const OctreeCell& cell,
+                                                     const OctreeCell*) {
+    cell_ids[&cell] = cell_count;
+    ++cell_count;
+    triangle_count += cell.triangles.size();
+  });
+
+  data_.reserve(cell_count);
+  triangles_.reserve(triangle_count);
+
+  Traverse([this, &cell_ids](const OctreeCell& cell, const OctreeCell* parent) {
+    OctreeData data;
+    data.aabb_min = cell.aabb.min;
+    data.aabb_max = cell.aabb.max;
+    data.triangles_begin = triangles_.size();
+    data.triangles_end = triangles_.size() + cell.triangles.size();
+    data.parent_index = parent == nullptr ? -1 : cell_ids[parent];
+    if (cell.children.size() == 8) {
+      for (int i = 0; i < 8; ++i) {
+        data.child_indices[i] = cell_ids[&cell.children[i]];
+      }
+    } else {
+      for (int i = 0; i < 8; ++i) {
+        data.child_indices[i] = -1;
+      }
+    }
+    data_.push_back(data);
+
+    triangles_.insert(triangles_.end(), cell.triangles.begin(),
+                      cell.triangles.end());
+  });
 }
 
 void Octree::SplitCell(OctreeCell* cell) {
