@@ -27,12 +27,9 @@ Octree::Octree(const Scene::Vertex* vertices, size_t vertex_count,
 }
 
 void Octree::InsertTriangle(uint32_t i0, uint32_t i1, uint32_t i2) {
-  const auto triangle_count_before = GetNumberOfTrianglesInChildren(&root_);
   TriangleIndices triangle_indices{i0, i1, i2};
   Triangle triangle = GetTriangleFromTriangleIndices(triangle_indices);
   InsertTriangle(&root_, triangle_indices, triangle);
-  const auto triangle_count_after = GetNumberOfTrianglesInChildren(&root_);
-  assert(triangle_count_after > triangle_count_before);
 }
 
 void Octree::Print() const { PrintCell(&root_); }
