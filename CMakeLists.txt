@@ -1,5 +1,12 @@
 cmake_minimum_required(VERSION 3.10)
 
+# cmake_dependent_option() does not seem to work properly
+if (APPLE)
+  option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" OFF)
+else ()
+  option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" ON)
+endif ()
+
 set(GLM_TEST_ENABLE OFF)
 add_subdirectory(extern/glm)
 
@@ -7,16 +14,7 @@ set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 set(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory(extern/assimp)
 
-include(cmake/shaders.cmake)
-
 find_package(SDL2 REQUIRED)
-find_package(OpenGL REQUIRED)
-
-add_shaders(
-  shaders/test.comp
-  shaders/fullscreen_quad.frag
-  shaders/fullscreen_quad.vert
-)
 
 add_executable(rainbow
   src/main.cpp
@@ -27,15 +25,7 @@ add_executable(rainbow
   src/timing.cpp
   src/octree.cpp
   src/rendering_backend.cpp
-
-  src/backends/opengl/opengl.cpp
-  src/backends/opengl/opengl_backend.cpp
-  src/backends/opengl/program.cpp
-  src/backends/opengl/texture.cpp
-  src/backends/opengl/buffer.cpp
 )
-
-add_dependencies(rainbow shaders)
 
 set_target_properties(rainbow
   PROPERTIES
@@ -49,7 +39,7 @@ target_include_directories(rainbow
 )
 
 target_link_libraries(rainbow
-  PRIVATE assimp glm SDL2 OpenGL::GL
+  PRIVATE assimp glm SDL2
 )
 
 if (APPLE)
@@ -63,3 +53,27 @@ if (APPLE)
     PRIVATE ${SDL2_LIBDIR}
   )
 endif (APPLE)
+
+if (RAINBOW_BACKEND_OPENGL)
+  target_sources(rainbow
+    PRIVATE
+      src/backends/opengl/opengl.cpp
+      src/backends/opengl/opengl_backend.cpp
+      src/backends/opengl/program.cpp
+      src/backends/opengl/texture.cpp
+      src/backends/opengl/buffer.cpp
+  )
+  
+  find_package(OpenGL REQUIRED)
+  target_link_libraries(rainbow
+    PRIVATE OpenGL::GL
+  )
+
+  include(cmake/shaders.cmake)
+  add_shaders(
+    shaders/test.comp
+    shaders/fullscreen_quad.frag
+    shaders/fullscreen_quad.vert
+  )
+  add_dependencies(rainbow shaders)
+endif (RAINBOW_BACKEND_OPENGL)
