@@ -6,6 +6,7 @@
 #include "rainbow/camera.hpp"
 #include "rainbow/rendering_backend.hpp"
 #include "rainbow/scene.hpp"
+#include "rainbow/viewport.hpp"
 
 namespace rainbow {
 
@@ -36,6 +37,7 @@ class Application final {
 
   std::chrono::steady_clock::time_point last_update_;
 
+  Viewport viewport_;
   std::unique_ptr<RenderingBackend> rendering_backend_;
 
   void ProcessEvent(const SDL_Event& event);

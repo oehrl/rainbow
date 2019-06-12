@@ -14,7 +14,7 @@ class OpenGLBackend final : public RenderingBackend {
  public:
   explicit OpenGLBackend(SDL_Window* window);
   void Prepare(const Scene& scene) override;
-  void Render(const Camera& camera) override;
+  void Render(const Camera& camera, Viewport* viewport) override;
 
  private:
   SDL_Window* window_;

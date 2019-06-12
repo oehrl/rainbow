@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 # cmake_dependent_option() does not seem to work properly
+option(RAINBOW_BACKEND_CPU "Enable the CPU rendering backend" ON)
 if (APPLE)
   option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" OFF)
 else ()
@@ -25,6 +26,7 @@ add_executable(rainbow
   src/timing.cpp
   src/octree.cpp
   src/rendering_backend.cpp
+  src/viewport.cpp
 )
 
 set_target_properties(rainbow
@@ -53,6 +55,14 @@ if (APPLE)
     PRIVATE ${SDL2_LIBDIR}
   )
 endif (APPLE)
+
+if (RAINBOW_BACKEND_CPU)
+  target_sources(rainbow
+    PRIVATE
+      src/backends/cpu/cpu_backend.cpp
+  )
+endif (RAINBOW_BACKEND_CPU)
+
 
 if (RAINBOW_BACKEND_OPENGL)
   target_sources(rainbow

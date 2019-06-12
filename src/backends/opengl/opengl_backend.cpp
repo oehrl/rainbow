@@ -58,7 +58,7 @@ void OpenGLBackend::Prepare(const Scene& scene) {
   triangle_count_ = scene.GetTriangleCount();
 }
 
-void OpenGLBackend::Render(const Camera& camera) {
+void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
   RAINBOW_TIME_FUNCTION();
 
   int window_width;
