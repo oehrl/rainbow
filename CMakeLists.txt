@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(GLM_TEST_ENABLE OFF CACHE BOOL "Don't build glm test suite")
+set(GLM_TEST_ENABLE OFF)
 add_subdirectory(extern/glm)
 
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "Don't build assimp tools")
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Don't build assimp test suite")
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory(extern/assimp)
 
 include(cmake/shaders.cmake)
