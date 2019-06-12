@@ -86,22 +86,6 @@ bool Scene::Load(const std::string& filename) {
   std::cout << "Total number of triangles: " << GetTriangleCount() << std::endl;
   octree_->Print();
 
-  RAINBOW_TIME_SECTION("Create OpenGL buffers") {
-    ShaderStorageBufferDescription desc;
-
-    desc.size = materials_.size() * sizeof(Material);
-    material_buffer_ =
-        std::make_unique<ShaderStorageBuffer>(desc, materials_.data());
-
-    desc.size = vertices_.size() * sizeof(Vertex);
-    vertex_buffer_ =
-        std::make_unique<ShaderStorageBuffer>(desc, vertices_.data());
-
-    desc.size = triangles_.size() * sizeof(Scene::Triangle);
-    triangle_buffer_ =
-        std::make_unique<ShaderStorageBuffer>(desc, triangles_.data());
-  };
-
   return scene_ != nullptr;
 }
 

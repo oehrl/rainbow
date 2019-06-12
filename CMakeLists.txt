@@ -29,6 +29,7 @@ add_executable(rainbow
   src/rendering_backend.cpp
 
   src/backends/opengl/opengl.cpp
+  src/backends/opengl/opengl_backend.cpp
   src/backends/opengl/program.cpp
   src/backends/opengl/texture.cpp
   src/backends/opengl/buffer.cpp

@@ -3,9 +3,8 @@
 #include <chrono>
 
 #include <SDL2/SDL.h>
-#include "rainbow/backends/opengl/program.hpp"
-#include "rainbow/backends/opengl/texture.hpp"
 #include "rainbow/camera.hpp"
+#include "rainbow/rendering_backend.hpp"
 #include "rainbow/scene.hpp"
 
 namespace rainbow {
@@ -37,12 +36,7 @@ class Application final {
 
   std::chrono::steady_clock::time_point last_update_;
 
-  std::vector<glm::vec3> view_direction_buffer_;
-
-  std::unique_ptr<Program> view_ray_tracing_program_;
-  std::unique_ptr<Program> fullscreen_quad_program_;
-  std::unique_ptr<Texture2D> output_texture_;
-  GLuint vao_;
+  std::unique_ptr<RenderingBackend> rendering_backend_;
 
   void ProcessEvent(const SDL_Event& event);
   void RenderPreview();

@@ -12,8 +12,6 @@
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 
-#include "rainbow/backends/opengl/buffer.hpp"
-#include "rainbow/backends/opengl/opengl.hpp"
 #include "rainbow/intersection.hpp"
 
 namespace rainbow {
@@ -52,16 +50,14 @@ class Scene {
 
   std::optional<HitPoint> ShootRay(const Ray& ray) const;
 
-  inline ShaderStorageBuffer* GetMaterialBuffer() const {
-    return material_buffer_.get();
+  inline const std::vector<Material>& GetMaterials() const {
+    return materials_;
   }
 
-  inline ShaderStorageBuffer* GetVertexBuffer() const {
-    return vertex_buffer_.get();
-  }
+  inline const std::vector<Vertex>& GetVertices() const { return vertices_; }
 
-  inline ShaderStorageBuffer* GetTriangleBuffer() const {
-    return triangle_buffer_.get();
+  inline const std::vector<Triangle>& GetTriangles() const {
+    return triangles_;
   }
 
   inline uint32_t GetTriangleCount() const { return triangles_.size(); }
@@ -82,10 +78,6 @@ class Scene {
   std::vector<Vertex> vertices_;
   std::vector<Triangle> triangles_;
   std::unique_ptr<Octree> octree_;
-
-  std::unique_ptr<ShaderStorageBuffer> material_buffer_;
-  std::unique_ptr<ShaderStorageBuffer> vertex_buffer_;
-  std::unique_ptr<ShaderStorageBuffer> triangle_buffer_;
 };
 
 }  // namespace rainbow
