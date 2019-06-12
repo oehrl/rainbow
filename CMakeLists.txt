@@ -26,6 +26,7 @@ add_executable(rainbow
   src/application.cpp
   src/timing.cpp
   src/octree.cpp
+  src/rendering_backend.cpp
 
   src/backends/opengl/opengl.cpp
   src/backends/opengl/program.cpp
