@@ -20,6 +20,9 @@ class Viewport {
     pixel_buffer_[y * width_ + x] = color;
   }
 
+  inline const glm::vec4* GetPixels() const { return pixel_buffer_.data(); }
+  inline glm::vec4* GetPixels() { return pixel_buffer_.data(); }
+
   void Clear(const glm::vec4& color);
 
  private:
