@@ -4,6 +4,7 @@
 #include "rainbow/camera.hpp"
 #include "rainbow/scene.hpp"
 #include "rainbow/timing.hpp"
+#include "rainbow/viewport.hpp"
 #include "shaders.hpp"
 
 namespace rainbow {
@@ -60,10 +61,7 @@ void OpenGLBackend::Prepare(const Scene& scene) {
 
 void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
   RAINBOW_TIME_FUNCTION();
-
-  int window_width;
-  int window_height;
-  SDL_GetWindowSize(window_, &window_width, &window_height);
+  GLenum error;
 
   glm::vec3 right;
   glm::vec3 up;
@@ -91,16 +89,8 @@ void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
   // Wait until writes to the images are finished
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-  fullscreen_quad_program_->Use();
-  glBindVertexArray(vao_);
   output_texture_->Bind(GL_TEXTURE0);
-  glUniform1i(fullscreen_quad_program_->GetUniformLocation("u_TextureSampler"),
-              0);
-  glUniform2f(fullscreen_quad_program_->GetUniformLocation("u_ViewportSize"),
-              512.0f, 512.0f);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-  SDL_GL_SwapWindow(window_);
+  glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, viewport->GetPixels());
 }
 
 }  // namespace rainbow
