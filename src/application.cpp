@@ -5,7 +5,12 @@
 
 #include <glm/geometric.hpp>
 
+#ifdef RAINBOW_BACKEND_CPU
 #include "rainbow/backends/cpu/cpu_backend.hpp"
+#endif
+#ifdef RAINBOW_BACKEND_OPENGL
+#include "rainbow/backends/opengl/opengl_backend.hpp"
+#endif
 #include "rainbow/timing.hpp"
 
 namespace rainbow {
@@ -20,7 +25,14 @@ Application::Application() : viewport_{512, 512} {
     throw std::runtime_error("Failed to create SDL window");
   }
   opengl_context_ = SDL_GL_CreateContext(window_);
+
+#if RAINBOW_BACKEND_OPENGL
+  rendering_backend_ = std::make_unique<OpenGLBackend>(window_);
+#elif RAINBOW_BACKEND_CPU
   rendering_backend_ = std::make_unique<CPUBackend>();
+#else
+#error No rendering backend available
+#endif
 }
 
 Application::~Application() {
