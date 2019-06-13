@@ -11,6 +11,9 @@
 #ifdef RAINBOW_BACKEND_OPENGL
 #include "rainbow/backends/opengl/opengl_backend.hpp"
 #endif
+#ifdef RAINBOW_BACKEND_METAL
+#include "rainbow/backends/metal/metal_backend.hpp"
+#endif
 #include "rainbow/timing.hpp"
 
 namespace rainbow {
@@ -23,7 +26,9 @@ Application::Application() : viewport_{512, 512} {
     throw std::runtime_error("Failed to create SDL window");
   }
 
-#if RAINBOW_BACKEND_OPENGL
+#if RAINBOW_BACKEND_METAL
+  rendering_backend_ = MakeMetalBackend();
+#elif RAINBOW_BACKEND_OPENGL
   rendering_backend_ = std::make_unique<OpenGLBackend>(window_);
 #elif RAINBOW_BACKEND_CPU
   rendering_backend_ = std::make_unique<CPUBackend>();
@@ -38,7 +43,7 @@ Application::~Application() {
   SDL_DestroyWindow(window_);
 }
 
-bool Application::LoadScene(const std::string& filename) {
+bool Application::LoadScene(const std::string &filename) {
   if (scene_.Load(filename)) {
     rendering_backend_->Prepare(scene_, viewport_.GetWidth(),
                                 viewport_.GetHeight());
@@ -77,30 +82,30 @@ void Application::Run() {
   }
 }
 
-void Application::ProcessEvent(const SDL_Event& event) {
+void Application::ProcessEvent(const SDL_Event &event) {
   switch (event.type) {
-    case SDL_QUIT:
-      quit_application_ = true;
-      break;
+  case SDL_QUIT:
+    quit_application_ = true;
+    break;
 
-    case SDL_MOUSEBUTTONDOWN:
-      if (event.button.button == SDL_BUTTON_LEFT) {
-        EnterInteractiveMode();
-      }
-      break;
+  case SDL_MOUSEBUTTONDOWN:
+    if (event.button.button == SDL_BUTTON_LEFT) {
+      EnterInteractiveMode();
+    }
+    break;
 
-    case SDL_MOUSEBUTTONUP:
-      if (event.button.button == SDL_BUTTON_LEFT) {
-        LeaveInteractiveMode();
-      }
-      break;
+  case SDL_MOUSEBUTTONUP:
+    if (event.button.button == SDL_BUTTON_LEFT) {
+      LeaveInteractiveMode();
+    }
+    break;
 
-    case SDL_MOUSEMOTION:
-      if (interactive_mode_) {
-        camera_.Rotate(event.motion.xrel * 0.01f, event.motion.yrel * 0.01f);
-        redraw_preview_ = true;
-      }
-      break;
+  case SDL_MOUSEMOTION:
+    if (interactive_mode_) {
+      camera_.Rotate(event.motion.xrel * 0.01f, event.motion.yrel * 0.01f);
+      redraw_preview_ = true;
+    }
+    break;
   }
 }
 
@@ -128,7 +133,7 @@ void Application::EnterInteractiveMode() {
 
 void Application::Update(std::chrono::duration<float> elapsed_time) {
   glm::vec3 move_vector{0.0f, 0.0f, 0.0f};
-  const Uint8* keys = SDL_GetKeyboardState(nullptr);
+  const Uint8 *keys = SDL_GetKeyboardState(nullptr);
 
   glm::vec3 right;
   glm::vec3 up;
@@ -163,4 +168,4 @@ void Application::Update(std::chrono::duration<float> elapsed_time) {
 
 void Application::LeaveInteractiveMode() { interactive_mode_ = false; }
 
-}  // namespace rainbow
+} // namespace rainbow

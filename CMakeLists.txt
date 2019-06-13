@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
+project(rainbow)
 
 # cmake_dependent_option() does not seem to work properly
 option(RAINBOW_BACKEND_CPU "Enable the CPU rendering backend" ON)
 if (APPLE)
-  option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" OFF)
+  option(RAINBOW_BACKEND_METAL "Enable the Metal rendering backend" ON)
 else ()
   option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" ON)
 endif ()
@@ -91,3 +92,25 @@ if (RAINBOW_BACKEND_OPENGL)
   )
   add_dependencies(rainbow shaders)
 endif (RAINBOW_BACKEND_OPENGL)
+
+if (RAINBOW_BACKEND_METAL)
+  target_sources(rainbow
+    PRIVATE
+      include/rainbow/backends/metal/metal_backend.hpp
+      src/backends/metal/metal_backend.hh
+      src/backends/metal/metal_backend.mm
+      src/backends/metal/library.metal
+  )
+  target_compile_definitions(rainbow
+    PRIVATE RAINBOW_BACKEND_METAL=1
+  )
+  target_link_libraries(rainbow
+    PRIVATE "-framework Foundation" "-framework Metal"
+  )
+  
+  include(cmake/shaders.cmake)
+  add_shaders(
+    src/backends/metal/library.metal
+  )
+  add_dependencies(rainbow shaders)
+endif (RAINBOW_BACKEND_METAL)
