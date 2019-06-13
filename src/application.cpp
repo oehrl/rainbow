@@ -16,9 +16,6 @@
 namespace rainbow {
 
 Application::Application() : viewport_{512, 512} {
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-
   if (SDL_CreateWindowAndRenderer(viewport_.GetWidth(), viewport_.GetHeight(),
                                   SDL_WINDOW_OPENGL, &window_,
                                   &renderer_) < 0) {
