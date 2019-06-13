@@ -19,9 +19,7 @@ class OpenGLBackend final : public RenderingBackend {
  private:
   SDL_Window* window_;
   std::unique_ptr<Program> view_ray_tracing_program_;
-  std::unique_ptr<Program> fullscreen_quad_program_;
   std::unique_ptr<Texture2D> output_texture_;
-  GLuint vao_;
 
   std::unique_ptr<ShaderStorageBuffer> material_buffer_;
   std::unique_ptr<ShaderStorageBuffer> vertex_buffer_;

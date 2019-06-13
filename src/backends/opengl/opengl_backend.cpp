@@ -22,20 +22,11 @@ OpenGLBackend::OpenGLBackend(SDL_Window* window) : window_(window) {
                                           shaders::test_comp);
   view_ray_tracing_program_->Link();
 
-  fullscreen_quad_program_ = std::make_unique<Program>();
-  fullscreen_quad_program_->AttachShader(GL_VERTEX_SHADER,
-                                         shaders::fullscreen_quad_vert);
-  fullscreen_quad_program_->AttachShader(GL_FRAGMENT_SHADER,
-                                         shaders::fullscreen_quad_frag);
-  fullscreen_quad_program_->Link();
-
   Texture2DDescription output_texture_description;
   output_texture_description.width = 512;
   output_texture_description.height = 512;
   output_texture_description.internal_format = GL_RGBA32F;
   output_texture_ = std::make_unique<Texture2D>(output_texture_description);
-
-  glGenVertexArrays(1, &vao_);
 }
 
 void OpenGLBackend::Prepare(const Scene& scene) {
@@ -61,7 +52,6 @@ void OpenGLBackend::Prepare(const Scene& scene) {
 
 void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
   RAINBOW_TIME_FUNCTION();
-  GLenum error;
 
   glm::vec3 right;
   glm::vec3 up;

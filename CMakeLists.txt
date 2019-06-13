@@ -82,8 +82,6 @@ if (RAINBOW_BACKEND_OPENGL)
   include(cmake/shaders.cmake)
   add_shaders(
     shaders/test.comp
-    shaders/fullscreen_quad.frag
-    shaders/fullscreen_quad.vert
   )
   add_dependencies(rainbow shaders)
 endif (RAINBOW_BACKEND_OPENGL)
