@@ -61,6 +61,9 @@ if (RAINBOW_BACKEND_CPU)
     PRIVATE
       src/backends/cpu/cpu_backend.cpp
   )
+  target_compile_definitions(rainbow
+    PRIVATE RAINBOW_BACKEND_CPU=1
+  )
 endif (RAINBOW_BACKEND_CPU)
 
 
@@ -72,6 +75,9 @@ if (RAINBOW_BACKEND_OPENGL)
       src/backends/opengl/program.cpp
       src/backends/opengl/texture.cpp
       src/backends/opengl/buffer.cpp
+  )
+  target_compile_definitions(rainbow
+    PRIVATE RAINBOW_BACKEND_OPENGL=1
   )
   
   find_package(OpenGL REQUIRED)
