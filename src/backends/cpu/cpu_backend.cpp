@@ -22,7 +22,7 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
 
   for (size_t y = 0; y < viewport_height; ++y) {
     const float y_normalized =
-        (1.0f - static_cast<float>(y) / (viewport_height - 1)) - 0.5f;
+        static_cast<float>(y) / (viewport_height - 1) - 0.5f;
     for (size_t x = 0; x < viewport_width; ++x) {
       const float x_normalized =
           static_cast<float>(x) / (viewport_width - 1) - 0.5f;

@@ -120,7 +120,7 @@ void Application::RenderPreview() {
       SDL_SetRenderDrawColor(renderer_, pixel_color.r * 255,
                              pixel_color.g * 255, pixel_color.b * 255,
                              pixel_color.a * 255);
-      SDL_RenderDrawPoint(renderer_, x, y);
+      SDL_RenderDrawPoint(renderer_, x, viewport_.GetHeight() - y - 1);
     }
   }
   SDL_RenderPresent(renderer_);
