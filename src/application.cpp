@@ -97,6 +97,7 @@ void Application::ProcessEvent(const SDL_Event& event) {
 void Application::RenderPreview() {
   RAINBOW_TIME_FUNCTION();
   viewport_.Clear(glm::vec4{0});
+  SDL_GL_MakeCurrent(window_, opengl_context_);
   rendering_backend_->Render(camera_, &viewport_);
 
   for (int y = 0; y < 512; ++y) {
