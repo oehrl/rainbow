@@ -1,9 +1,9 @@
 #include <SDL2/SDL.h>
 #include <chrono>
 #include <iostream>
-#include "application.hpp"
-#include "camera.hpp"
-#include "scene.hpp"
+#include "rainbow/application.hpp"
+#include "rainbow/camera.hpp"
+#include "rainbow/scene.hpp"
 
 int main(int argc, char* argv[]) {
   SDL_Init(SDL_INIT_VIDEO);

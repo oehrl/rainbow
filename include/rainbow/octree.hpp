@@ -2,8 +2,8 @@
 
 #include <glm/vec3.hpp>
 
-#include "intersection.hpp"
-#include "scene.hpp"
+#include "rainbow/intersection.hpp"
+#include "rainbow/scene.hpp"
 
 namespace rainbow {
 

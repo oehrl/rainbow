@@ -1,4 +1,4 @@
-#include "camera.hpp"
+#include "rainbow/camera.hpp"
 
 #include <cmath>
 

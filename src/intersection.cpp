@@ -1,4 +1,4 @@
-#include "intersection.hpp"
+#include "rainbow/intersection.hpp"
 #include <cassert>
 #include <glm/gtx/intersect.hpp>
 #include <vector>

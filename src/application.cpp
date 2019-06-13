@@ -1,62 +1,47 @@
-#include "application.hpp"
+#include "rainbow/application.hpp"
 
 #include <chrono>
 #include <iostream>
 
 #include <glm/geometric.hpp>
 
-#include "shaders.hpp"
-#include "timing.hpp"
+#ifdef RAINBOW_BACKEND_CPU
+#include "rainbow/backends/cpu/cpu_backend.hpp"
+#endif
+#ifdef RAINBOW_BACKEND_OPENGL
+#include "rainbow/backends/opengl/opengl_backend.hpp"
+#endif
+#include "rainbow/timing.hpp"
 
 namespace rainbow {
 
-Application::Application() {
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-
-  if (SDL_CreateWindowAndRenderer(512, 512, SDL_WINDOW_OPENGL, &window_,
+Application::Application() : viewport_{512, 512} {
+  if (SDL_CreateWindowAndRenderer(viewport_.GetWidth(), viewport_.GetHeight(),
+                                  SDL_WINDOW_OPENGL, &window_,
                                   &renderer_) < 0) {
     std::cerr << "Failed to create window!" << std::endl;
     throw std::runtime_error("Failed to create SDL window");
   }
-  opengl_context_ = SDL_GL_CreateContext(window_);
 
-  GLint gl_major_version;
-  glGetIntegerv(GL_MAJOR_VERSION, &gl_major_version);
-  GLint gl_minor_version;
-  glGetIntegerv(GL_MINOR_VERSION, &gl_minor_version);
-  std::cout << "Using OpenGL " << gl_major_version << "." << gl_minor_version
-            << std::endl;
-
-  view_ray_tracing_program_ = std::make_unique<Program>();
-  view_ray_tracing_program_->AttachShader(GL_COMPUTE_SHADER,
-                                          shaders::test_comp);
-  view_ray_tracing_program_->Link();
-
-  fullscreen_quad_program_ = std::make_unique<Program>();
-  fullscreen_quad_program_->AttachShader(GL_VERTEX_SHADER,
-                                         shaders::fullscreen_quad_vert);
-  fullscreen_quad_program_->AttachShader(GL_FRAGMENT_SHADER,
-                                         shaders::fullscreen_quad_frag);
-  fullscreen_quad_program_->Link();
-
-  Texture2DDescription output_texture_description;
-  output_texture_description.width = 512;
-  output_texture_description.height = 512;
-  output_texture_description.internal_format = GL_RGBA32F;
-  output_texture_ = std::make_unique<Texture2D>(output_texture_description);
-
-  glGenVertexArrays(1, &vao_);
+#if RAINBOW_BACKEND_OPENGL
+  rendering_backend_ = std::make_unique<OpenGLBackend>(window_);
+#elif RAINBOW_BACKEND_CPU
+  rendering_backend_ = std::make_unique<CPUBackend>();
+#else
+#error No rendering backend available
+#endif
 }
 
 Application::~Application() {
-  SDL_GL_DeleteContext(opengl_context_);
+  rendering_backend_.reset();
   SDL_DestroyRenderer(renderer_);
   SDL_DestroyWindow(window_);
 }
 
 bool Application::LoadScene(const std::string& filename) {
   if (scene_.Load(filename)) {
+    rendering_backend_->Prepare(scene_, viewport_.GetWidth(),
+                                viewport_.GetHeight());
     RenderPreview();
     return true;
   } else {
@@ -121,52 +106,19 @@ void Application::ProcessEvent(const SDL_Event& event) {
 
 void Application::RenderPreview() {
   RAINBOW_TIME_FUNCTION();
+  viewport_.Clear(glm::vec4{0});
+  rendering_backend_->Render(camera_, &viewport_);
 
-  int window_width;
-  int window_height;
-  SDL_GetWindowSize(window_, &window_width, &window_height);
-
-  // RAINBOW_TIME_SECTION("Compute view rays") {
-  //   camera_.ComputeViewDirections(glm::uvec2{window_width, window_height},
-  //                                 &view_direction_buffer_);
-  // };
-
-  glm::vec3 right;
-  glm::vec3 up;
-  glm::vec3 forward;
-  camera_.GetAxisVectors(&right, &up, &forward);
-  glm::vec3 camera_position = camera_.GetPosition();
-
-  view_ray_tracing_program_->Use();
-  output_texture_->BindImage(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-  scene_.GetMaterialBuffer()->BindToIndex(0);
-  scene_.GetVertexBuffer()->BindToIndex(1);
-  scene_.GetTriangleBuffer()->BindToIndex(2);
-  glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Right"), 1,
-               &right.x);
-  glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Up"), 1, &up.x);
-  glUniform3fv(view_ray_tracing_program_->GetUniformLocation("u_Forward"), 1,
-               &forward.x);
-  glUniform3fv(
-      view_ray_tracing_program_->GetUniformLocation("u_CameraPosition"), 1,
-      &camera_position.x);
-  glUniform1ui(view_ray_tracing_program_->GetUniformLocation("u_TriangleCount"),
-               scene_.GetTriangleCount());
-  glDispatchCompute(512, 512, 1);
-
-  // Wait until writes to the images are finished
-  glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-
-  fullscreen_quad_program_->Use();
-  glBindVertexArray(vao_);
-  output_texture_->Bind(GL_TEXTURE0);
-  glUniform1i(fullscreen_quad_program_->GetUniformLocation("u_TextureSampler"),
-              0);
-  glUniform2f(fullscreen_quad_program_->GetUniformLocation("u_ViewportSize"),
-              512.0f, 512.0f);
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-  SDL_GL_SwapWindow(window_);
+  for (size_t y = 0; y < viewport_.GetHeight(); ++y) {
+    for (size_t x = 0; x < viewport_.GetWidth(); ++x) {
+      const auto pixel_color = viewport_.GetPixel(x, y);
+      SDL_SetRenderDrawColor(renderer_, pixel_color.r * 255,
+                             pixel_color.g * 255, pixel_color.b * 255,
+                             pixel_color.a * 255);
+      SDL_RenderDrawPoint(renderer_, x, viewport_.GetHeight() - y - 1);
+    }
+  }
+  SDL_RenderPresent(renderer_);
 }
 
 void Application::EnterInteractiveMode() {

@@ -1,22 +1,21 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(GLM_TEST_ENABLE OFF CACHE BOOL "Don't build glm test suite")
+# cmake_dependent_option() does not seem to work properly
+option(RAINBOW_BACKEND_CPU "Enable the CPU rendering backend" ON)
+if (APPLE)
+  option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" OFF)
+else ()
+  option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" ON)
+endif ()
+
+set(GLM_TEST_ENABLE OFF)
 add_subdirectory(extern/glm)
 
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "Don't build assimp tools")
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "Don't build assimp test suite")
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
 add_subdirectory(extern/assimp)
 
-include(cmake/shaders.cmake)
-
 find_package(SDL2 REQUIRED)
-find_package(OpenGL REQUIRED)
-
-add_shaders(
-  shaders/test.comp
-  shaders/fullscreen_quad.frag
-  shaders/fullscreen_quad.vert
-)
 
 add_executable(rainbow
   src/main.cpp
@@ -25,14 +24,10 @@ add_executable(rainbow
   src/camera.cpp
   src/application.cpp
   src/timing.cpp
-  src/opengl.cpp
-  src/program.cpp
-  src/texture.cpp
-  src/buffer.cpp
   src/octree.cpp
+  src/rendering_backend.cpp
+  src/viewport.cpp
 )
-
-add_dependencies(rainbow shaders)
 
 set_target_properties(rainbow
   PROPERTIES
@@ -46,7 +41,7 @@ target_include_directories(rainbow
 )
 
 target_link_libraries(rainbow
-  PRIVATE assimp glm SDL2 OpenGL::GL
+  PRIVATE assimp glm SDL2
 )
 
 if (APPLE)
@@ -60,3 +55,39 @@ if (APPLE)
     PRIVATE ${SDL2_LIBDIR}
   )
 endif (APPLE)
+
+if (RAINBOW_BACKEND_CPU)
+  target_sources(rainbow
+    PRIVATE
+      src/backends/cpu/cpu_backend.cpp
+  )
+  target_compile_definitions(rainbow
+    PRIVATE RAINBOW_BACKEND_CPU=1
+  )
+endif (RAINBOW_BACKEND_CPU)
+
+
+if (RAINBOW_BACKEND_OPENGL)
+  target_sources(rainbow
+    PRIVATE
+      src/backends/opengl/opengl.cpp
+      src/backends/opengl/opengl_backend.cpp
+      src/backends/opengl/program.cpp
+      src/backends/opengl/texture.cpp
+      src/backends/opengl/buffer.cpp
+  )
+  target_compile_definitions(rainbow
+    PRIVATE RAINBOW_BACKEND_OPENGL=1
+  )
+  
+  find_package(OpenGL REQUIRED)
+  target_link_libraries(rainbow
+    PRIVATE OpenGL::GL
+  )
+
+  include(cmake/shaders.cmake)
+  add_shaders(
+    src/backends/opengl/view_rays.comp
+  )
+  add_dependencies(rainbow shaders)
+endif (RAINBOW_BACKEND_OPENGL)
