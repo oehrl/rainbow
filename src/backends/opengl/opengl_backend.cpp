@@ -3,9 +3,9 @@
 #include <iostream>
 #include "rainbow/camera.hpp"
 #include "rainbow/scene.hpp"
+#include "rainbow/shaders/view_rays.comp.hpp"
 #include "rainbow/timing.hpp"
 #include "rainbow/viewport.hpp"
-#include "shaders.hpp"
 
 namespace rainbow {
 
@@ -23,7 +23,7 @@ OpenGLBackend::OpenGLBackend(SDL_Window* window) : window_(window) {
 
   view_ray_tracing_program_ = std::make_unique<Program>();
   view_ray_tracing_program_->AttachShader(GL_COMPUTE_SHADER,
-                                          shaders::test_comp);
+                                          shaders::view_rays_comp);
   view_ray_tracing_program_->Link();
 }
 

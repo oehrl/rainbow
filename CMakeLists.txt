@@ -87,7 +87,7 @@ if (RAINBOW_BACKEND_OPENGL)
 
   include(cmake/shaders.cmake)
   add_shaders(
-    shaders/test.comp
+    src/backends/opengl/view_rays.comp
   )
   add_dependencies(rainbow shaders)
 endif (RAINBOW_BACKEND_OPENGL)

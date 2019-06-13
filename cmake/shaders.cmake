@@ -1,6 +1,6 @@
 function(ADD_SHADERS)
 
-  set(SHADERS_FILE ${CMAKE_CURRENT_BINARY_DIR}/include/shaders.hpp)
+  set(SHADERS_FILE ${CMAKE_CURRENT_BINARY_DIR}/include/rainbow/shaders.hpp)
   file(WRITE ${SHADERS_FILE} "#pragma once\n")
 
   foreach (SHADER ${ARGV})
@@ -11,7 +11,7 @@ function(ADD_SHADERS)
     file(READ ${SHADER} SHADER_SOURCE)
     string(REPLACE "\n" "\\n" SHADER_SOURCE "${SHADER_SOURCE}")
 
-    set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/shaders/${SHADER_NAME}.${SHADER_EXTENSION}.hpp)
+    set(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/include/rainbow/shaders/${SHADER_NAME}.${SHADER_EXTENSION}.hpp)
     
     configure_file(
       cmake/shader.hpp.in
