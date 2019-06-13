@@ -21,16 +21,18 @@ OpenGLBackend::OpenGLBackend(SDL_Window* window) : window_(window) {
   view_ray_tracing_program_->AttachShader(GL_COMPUTE_SHADER,
                                           shaders::test_comp);
   view_ray_tracing_program_->Link();
-
-  Texture2DDescription output_texture_description;
-  output_texture_description.width = 512;
-  output_texture_description.height = 512;
-  output_texture_description.internal_format = GL_RGBA32F;
-  output_texture_ = std::make_unique<Texture2D>(output_texture_description);
 }
 
-void OpenGLBackend::Prepare(const Scene& scene) {
+void OpenGLBackend::Prepare(const Scene& scene, size_t viewport_width,
+                            size_t viewport_height) {
   RAINBOW_TIME_FUNCTION();
+
+  Texture2DDescription output_texture_description;
+  output_texture_description.width = viewport_width;
+  output_texture_description.height = viewport_height;
+  output_texture_description.internal_format = GL_RGBA32F;
+  output_texture_ = std::make_unique<Texture2D>(output_texture_description);
+
   ShaderStorageBufferDescription desc;
 
   const auto& materials = scene.GetMaterials();
@@ -74,7 +76,7 @@ void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
       &camera_position.x);
   glUniform1ui(view_ray_tracing_program_->GetUniformLocation("u_TriangleCount"),
                triangle_count_);
-  glDispatchCompute(512, 512, 1);
+  glDispatchCompute(viewport->GetWidth(), viewport->GetHeight(), 1);
 
   // Wait until writes to the images are finished
   glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);

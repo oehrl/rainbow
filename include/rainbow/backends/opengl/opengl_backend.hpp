@@ -13,7 +13,8 @@ namespace rainbow {
 class OpenGLBackend final : public RenderingBackend {
  public:
   explicit OpenGLBackend(SDL_Window* window);
-  void Prepare(const Scene& scene) override;
+  void Prepare(const Scene& scene, size_t viewport_width,
+               size_t viewport_height) override;
   void Render(const Camera& camera, Viewport* viewport) override;
 
  private:

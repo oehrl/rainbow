@@ -19,7 +19,8 @@ Application::Application() : viewport_{512, 512} {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 
-  if (SDL_CreateWindowAndRenderer(512, 512, SDL_WINDOW_OPENGL, &window_,
+  if (SDL_CreateWindowAndRenderer(viewport_.GetWidth(), viewport_.GetHeight(),
+                                  SDL_WINDOW_OPENGL, &window_,
                                   &renderer_) < 0) {
     std::cerr << "Failed to create window!" << std::endl;
     throw std::runtime_error("Failed to create SDL window");
@@ -43,7 +44,8 @@ Application::~Application() {
 
 bool Application::LoadScene(const std::string& filename) {
   if (scene_.Load(filename)) {
-    rendering_backend_->Prepare(scene_);
+    rendering_backend_->Prepare(scene_, viewport_.GetWidth(),
+                                viewport_.GetHeight());
     RenderPreview();
     return true;
   } else {
@@ -112,8 +114,8 @@ void Application::RenderPreview() {
   SDL_GL_MakeCurrent(window_, opengl_context_);
   rendering_backend_->Render(camera_, &viewport_);
 
-  for (int y = 0; y < 512; ++y) {
-    for (int x = 0; x < 512; ++x) {
+  for (size_t y = 0; y < viewport_.GetWidth(); ++y) {
+    for (size_t x = 0; x < viewport_.GetHeight(); ++x) {
       const auto pixel_color = viewport_.GetPixel(x, y);
       SDL_SetRenderDrawColor(renderer_, pixel_color.r * 255,
                              pixel_color.g * 255, pixel_color.b * 255,

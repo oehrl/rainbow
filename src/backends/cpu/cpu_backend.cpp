@@ -6,7 +6,10 @@
 
 namespace rainbow {
 
-void CPUBackend::Prepare(const Scene& scene) { scene_ = &scene; }
+void CPUBackend::Prepare(const Scene& scene, size_t viewport_width,
+                         size_t viewport_height) {
+  scene_ = &scene;
+}
 
 void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   glm::vec3 right;
