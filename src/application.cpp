@@ -114,8 +114,8 @@ void Application::RenderPreview() {
   SDL_GL_MakeCurrent(window_, opengl_context_);
   rendering_backend_->Render(camera_, &viewport_);
 
-  for (size_t y = 0; y < viewport_.GetWidth(); ++y) {
-    for (size_t x = 0; x < viewport_.GetHeight(); ++x) {
+  for (size_t y = 0; y < viewport_.GetHeight(); ++y) {
+    for (size_t x = 0; x < viewport_.GetWidth(); ++x) {
       const auto pixel_color = viewport_.GetPixel(x, y);
       SDL_SetRenderDrawColor(renderer_, pixel_color.r * 255,
                              pixel_color.g * 255, pixel_color.b * 255,
@@ -123,7 +123,7 @@ void Application::RenderPreview() {
       SDL_RenderDrawPoint(renderer_, x, y);
     }
   }
-  SDL_GL_SwapWindow(window_);
+  SDL_RenderPresent(renderer_);
 }
 
 void Application::EnterInteractiveMode() {
