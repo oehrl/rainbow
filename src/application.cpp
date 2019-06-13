@@ -25,7 +25,6 @@ Application::Application() : viewport_{512, 512} {
     std::cerr << "Failed to create window!" << std::endl;
     throw std::runtime_error("Failed to create SDL window");
   }
-  opengl_context_ = SDL_GL_CreateContext(window_);
 
 #if RAINBOW_BACKEND_OPENGL
   rendering_backend_ = std::make_unique<OpenGLBackend>(window_);
@@ -37,7 +36,7 @@ Application::Application() : viewport_{512, 512} {
 }
 
 Application::~Application() {
-  SDL_GL_DeleteContext(opengl_context_);
+  rendering_backend_.reset();
   SDL_DestroyRenderer(renderer_);
   SDL_DestroyWindow(window_);
 }
@@ -111,7 +110,6 @@ void Application::ProcessEvent(const SDL_Event& event) {
 void Application::RenderPreview() {
   RAINBOW_TIME_FUNCTION();
   viewport_.Clear(glm::vec4{0});
-  SDL_GL_MakeCurrent(window_, opengl_context_);
   rendering_backend_->Render(camera_, &viewport_);
 
   for (size_t y = 0; y < viewport_.GetHeight(); ++y) {

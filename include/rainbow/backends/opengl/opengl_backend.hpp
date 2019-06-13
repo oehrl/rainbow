@@ -13,12 +13,14 @@ namespace rainbow {
 class OpenGLBackend final : public RenderingBackend {
  public:
   explicit OpenGLBackend(SDL_Window* window);
+  ~OpenGLBackend() override;
   void Prepare(const Scene& scene, size_t viewport_width,
                size_t viewport_height) override;
   void Render(const Camera& camera, Viewport* viewport) override;
 
  private:
   SDL_Window* window_;
+  SDL_GLContext opengl_context_;
   std::unique_ptr<Program> view_ray_tracing_program_;
   std::unique_ptr<Texture2D> output_texture_;
 

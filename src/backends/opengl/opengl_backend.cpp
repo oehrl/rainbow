@@ -10,6 +10,8 @@
 namespace rainbow {
 
 OpenGLBackend::OpenGLBackend(SDL_Window* window) : window_(window) {
+  opengl_context_ = SDL_GL_CreateContext(window_);
+
   GLint gl_major_version;
   glGetIntegerv(GL_MAJOR_VERSION, &gl_major_version);
   GLint gl_minor_version;
@@ -23,9 +25,21 @@ OpenGLBackend::OpenGLBackend(SDL_Window* window) : window_(window) {
   view_ray_tracing_program_->Link();
 }
 
+OpenGLBackend::~OpenGLBackend() {
+  SDL_GL_MakeCurrent(window_, opengl_context_);
+  view_ray_tracing_program_.reset();
+  output_texture_.reset();
+  material_buffer_.reset();
+  vertex_buffer_.reset();
+  triangle_buffer_.reset();
+  SDL_GL_DeleteContext(opengl_context_);
+}
+
 void OpenGLBackend::Prepare(const Scene& scene, size_t viewport_width,
                             size_t viewport_height) {
   RAINBOW_TIME_FUNCTION();
+
+  SDL_GL_MakeCurrent(window_, opengl_context_);
 
   Texture2DDescription output_texture_description;
   output_texture_description.width = viewport_width;
@@ -54,6 +68,8 @@ void OpenGLBackend::Prepare(const Scene& scene, size_t viewport_width,
 
 void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
   RAINBOW_TIME_FUNCTION();
+
+  SDL_GL_MakeCurrent(window_, opengl_context_);
 
   glm::vec3 right;
   glm::vec3 up;

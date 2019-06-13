@@ -29,7 +29,6 @@ class Application final {
   Camera camera_;
   SDL_Window* window_;
   SDL_Renderer* renderer_;
-  SDL_GLContext opengl_context_;
 
   bool quit_application_ = false;
   bool interactive_mode_ = false;
