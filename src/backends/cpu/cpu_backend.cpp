@@ -1,7 +1,10 @@
 #include "rainbow/backends/cpu/cpu_backend.hpp"
 #include <glm/vec3.hpp>
+#include <iostream>
 #include "rainbow/camera.hpp"
+#include "rainbow/parallel.hpp"
 #include "rainbow/scene.hpp"
+#include "rainbow/timing.hpp"
 #include "rainbow/viewport.hpp"
 
 namespace rainbow {
@@ -20,24 +23,26 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   const size_t viewport_width = viewport->GetWidth();
   const size_t viewport_height = viewport->GetHeight();
 
-  for (size_t y = 0; y < viewport_height; ++y) {
-    const float y_normalized =
-        static_cast<float>(y) / (viewport_height - 1) - 0.5f;
-    for (size_t x = 0; x < viewport_width; ++x) {
-      const float x_normalized =
-          static_cast<float>(x) / (viewport_width - 1) - 0.5f;
+  RAINBOW_TIME_SECTION("CPU Ray Tracing") {
+    ParallelFor(viewport_height, [&](size_t y) {
+      const float y_normalized =
+          static_cast<float>(y) / (viewport_height - 1) - 0.5f;
+      for (size_t x = 0; x < viewport_width; ++x) {
+        const float x_normalized =
+            static_cast<float>(x) / (viewport_width - 1) - 0.5f;
 
-      const auto view_ray_direction =
-          glm::normalize(x_normalized * right + y_normalized * up + forward);
+        const auto view_ray_direction =
+            glm::normalize(x_normalized * right + y_normalized * up + forward);
 
-      const auto hitpoint =
-          scene_->ShootRay({camera.GetPosition(), view_ray_direction});
+        const auto hitpoint =
+            scene_->ShootRay({camera.GetPosition(), view_ray_direction});
 
-      if (hitpoint) {
-        viewport->SetPixel(x, y, hitpoint->material->diffuse);
+        if (hitpoint) {
+          viewport->SetPixel(x, y, hitpoint->material->diffuse);
+        }
       }
-    }
-  }
+    });
+  };
 }
 
 }  // namespace rainbow

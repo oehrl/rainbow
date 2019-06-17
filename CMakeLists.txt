@@ -9,13 +9,8 @@ else ()
   option(RAINBOW_BACKEND_OPENGL "Enable the OpenGL rendering backend (required OpenGL 4.3)" ON)
 endif ()
 
-set(GLM_TEST_ENABLE OFF)
-add_subdirectory(extern/glm)
-
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-set(ASSIMP_BUILD_TESTS OFF)
-add_subdirectory(extern/assimp)
-
+find_package(glm REQUIRED)
+find_package(assimp REQUIRED)
 find_package(SDL2 REQUIRED)
 
 add_executable(rainbow
@@ -28,6 +23,9 @@ add_executable(rainbow
   src/octree.cpp
   src/rendering_backend.cpp
   src/viewport.cpp
+  src/thread_pool.cpp
+  src/integral_range.cpp
+  src/parallel.cpp
 )
 
 set_target_properties(rainbow
@@ -46,14 +44,14 @@ target_link_libraries(rainbow
 )
 
 if (APPLE)
-  # The SDL2 package provided by homebrew does not define a target. So, we have
+  # The packages provided by homebrew do not define a target. So, we have
   # to set the include directories and link directories manually.
   target_include_directories(rainbow
-    PRIVATE ${SDL2_INCLUDE_DIRS}/..
+    PRIVATE ${SDL2_INCLUDE_DIRS}/.. ${ASSIMP_INCLUDE_DIRS}
   )
 
   target_link_directories(rainbow
-    PRIVATE ${SDL2_LIBDIR}
+    PRIVATE ${SDL2_LIBDIR} ${ASSIMP_LIBRARY_DIRS}
   )
 endif (APPLE)
 

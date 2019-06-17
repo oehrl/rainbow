@@ -14,6 +14,7 @@
 #ifdef RAINBOW_BACKEND_METAL
 #include "rainbow/backends/metal/metal_backend.hpp"
 #endif
+#include "rainbow/parallel.hpp"
 #include "rainbow/timing.hpp"
 
 namespace rainbow {
@@ -24,6 +25,14 @@ Application::Application() : viewport_{512, 512} {
                                   &renderer_) < 0) {
     std::cerr << "Failed to create window!" << std::endl;
     throw std::runtime_error("Failed to create SDL window");
+  }
+
+  texture_ = SDL_CreateTexture(renderer_, SDL_PIXELFORMAT_RGBA8888,
+                               SDL_TEXTUREACCESS_STREAMING,
+                               viewport_.GetWidth(), viewport_.GetHeight());
+  if (!texture_) {
+    std::cerr << "Failed to create viewport texture!" << std::endl;
+    throw std::runtime_error("Failed to create viewport texture!");
   }
 
 #if RAINBOW_BACKEND_METAL
@@ -43,7 +52,7 @@ Application::~Application() {
   SDL_DestroyWindow(window_);
 }
 
-bool Application::LoadScene(const std::string &filename) {
+bool Application::LoadScene(const std::string& filename) {
   if (scene_.Load(filename)) {
     rendering_backend_->Prepare(scene_, viewport_.GetWidth(),
                                 viewport_.GetHeight());
@@ -82,30 +91,30 @@ void Application::Run() {
   }
 }
 
-void Application::ProcessEvent(const SDL_Event &event) {
+void Application::ProcessEvent(const SDL_Event& event) {
   switch (event.type) {
-  case SDL_QUIT:
-    quit_application_ = true;
-    break;
+    case SDL_QUIT:
+      quit_application_ = true;
+      break;
 
-  case SDL_MOUSEBUTTONDOWN:
-    if (event.button.button == SDL_BUTTON_LEFT) {
-      EnterInteractiveMode();
-    }
-    break;
+    case SDL_MOUSEBUTTONDOWN:
+      if (event.button.button == SDL_BUTTON_LEFT) {
+        EnterInteractiveMode();
+      }
+      break;
 
-  case SDL_MOUSEBUTTONUP:
-    if (event.button.button == SDL_BUTTON_LEFT) {
-      LeaveInteractiveMode();
-    }
-    break;
+    case SDL_MOUSEBUTTONUP:
+      if (event.button.button == SDL_BUTTON_LEFT) {
+        LeaveInteractiveMode();
+      }
+      break;
 
-  case SDL_MOUSEMOTION:
-    if (interactive_mode_) {
-      camera_.Rotate(event.motion.xrel * 0.01f, event.motion.yrel * 0.01f);
-      redraw_preview_ = true;
-    }
-    break;
+    case SDL_MOUSEMOTION:
+      if (interactive_mode_) {
+        camera_.Rotate(event.motion.xrel * 0.01f, event.motion.yrel * 0.01f);
+        redraw_preview_ = true;
+      }
+      break;
   }
 }
 
@@ -114,17 +123,28 @@ void Application::RenderPreview() {
   viewport_.Clear(glm::vec4{0});
   rendering_backend_->Render(camera_, &viewport_);
 
-  for (size_t y = 0; y < viewport_.GetHeight(); ++y) {
-    for (size_t x = 0; x < viewport_.GetWidth(); ++x) {
-      const auto pixel_color = viewport_.GetPixel(x, y);
-      SDL_SetRenderDrawColor(renderer_, pixel_color.r * 255,
-                             pixel_color.g * 255, pixel_color.b * 255,
-                             pixel_color.a * 255);
-      SDL_RenderDrawPoint(renderer_, x, viewport_.GetHeight() - y - 1);
+  uint8_t* pixels;
+  int pitch;
+  RAINBOW_TIME_SECTION("Write texture data") {
+    if (SDL_LockTexture(texture_, nullptr, reinterpret_cast<void**>(&pixels),
+                        &pitch) == 0) {
+      ParallelFor(viewport_.GetHeight(), [pitch, pixels, this](auto y) {
+        for (size_t x = 0; x < viewport_.GetWidth(); ++x) {
+          const auto pixel_color = viewport_.GetPixel(x, y);
+          for (auto i : IntegralRange{4}) {
+            pixels[y * pitch + x * 4 + i] = pixel_color[3 - i] * 255;
+          }
+        }
+      });
+
+      SDL_UnlockTexture(texture_);
+    } else {
+      throw std::runtime_error("Failed to lock texture");
     }
-  }
+  };
+  SDL_RenderCopy(renderer_, texture_, nullptr, nullptr);
   SDL_RenderPresent(renderer_);
-}
+}  // namespace rainbow
 
 void Application::EnterInteractiveMode() {
   interactive_mode_ = true;
@@ -133,7 +153,7 @@ void Application::EnterInteractiveMode() {
 
 void Application::Update(std::chrono::duration<float> elapsed_time) {
   glm::vec3 move_vector{0.0f, 0.0f, 0.0f};
-  const Uint8 *keys = SDL_GetKeyboardState(nullptr);
+  const Uint8* keys = SDL_GetKeyboardState(nullptr);
 
   glm::vec3 right;
   glm::vec3 up;
@@ -168,4 +188,4 @@ void Application::Update(std::chrono::duration<float> elapsed_time) {
 
 void Application::LeaveInteractiveMode() { interactive_mode_ = false; }
 
-} // namespace rainbow
+}  // namespace rainbow
