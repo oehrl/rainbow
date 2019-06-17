@@ -100,6 +100,11 @@ template <typename FunctionType, typename... ArgTypes>
 auto ThreadPool::EnqueueTask(FunctionType&& function, ArgTypes&&... arguments) {
   using ResultType = std::invoke_result_t<FunctionType, ArgTypes...>;
 
+  // TODO: Remove the make shared by creating a custom Task class similar to
+  // std::function that stores the functor inside the class instead of
+  // allocating as std::function does it (up to a certain size of course). The
+  // reason we cannot use std::function for that directly is, that it requires
+  // the function object to be copyable.
   auto task = std::make_shared<std::packaged_task<ResultType()>>(
       std::bind(std::forward<FunctionType>(function),
                 std::forward<ArgTypes>(arguments)...));
