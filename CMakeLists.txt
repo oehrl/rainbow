@@ -27,6 +27,9 @@ add_executable(rainbow
   src/octree.cpp
   src/rendering_backend.cpp
   src/viewport.cpp
+  src/thread_pool.cpp
+  src/integral_range.cpp
+  src/parallel.cpp
 )
 
 set_target_properties(rainbow
