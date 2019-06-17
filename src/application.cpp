@@ -106,7 +106,7 @@ void Application::ProcessEvent(const SDL_Event& event) {
 
     case SDL_MOUSEMOTION:
       if (interactive_mode_) {
-        camera_.Rotate(event.motion.xrel * 0.01f, event.motion.yrel * 0.01f);
+        camera_.Rotate(event.motion.xrel * 0.01f, -event.motion.yrel * 0.01f);
         redraw_preview_ = true;
       }
       break;
