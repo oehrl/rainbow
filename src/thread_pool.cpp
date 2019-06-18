@@ -14,7 +14,7 @@ ThreadPool::ThreadPool(unsigned int worker_count) : close_(false) {
 ThreadPool::~ThreadPool() {
   close_ = true;
   tasks_cv_.notify_all();
-  for (auto &worker : workers_) {
+  for (auto& worker : workers_) {
     worker.join();
   }
 }
@@ -37,4 +37,4 @@ void ThreadPool::WorkerThread() {
   }
 }
 
-} // namespace rainbow
+}  // namespace rainbow
