@@ -28,6 +28,7 @@ add_executable(rainbow
   src/parallel.cpp
   src/vector.cpp
   src/data_structures.cpp
+  src/constants.cpp
 )
 
 set_target_properties(rainbow

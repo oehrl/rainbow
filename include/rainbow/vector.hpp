@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <ostream>
+#include "rainbow/constants.hpp"
 
 namespace rainbow {
 
@@ -16,6 +17,15 @@ union alignas(sizeof(float) * 2) Vector2 {
   inline float operator[](int index) const { return data[index]; }
 
   static constexpr int VECTOR_ELEMENT_COUNT = 2;
+  inline static constexpr Vector2 Zero() { return {0.0f, 0.0f}; }
+  inline static constexpr Vector2 One() { return {1.0f, 1.0f}; }
+  inline static constexpr Vector2 Infinity() {
+    return {rainbow::Infinity<float>(), rainbow::Infinity<float>()};
+  }
+  inline static constexpr Vector2 PositiveX() { return {1.0f, 0.0f}; }
+  inline static constexpr Vector2 NegativeX() { return {-1.0f, 0.0f}; }
+  inline static constexpr Vector2 PositiveY() { return {0.0f, 1.0f}; }
+  inline static constexpr Vector2 NegativeY() { return {0.0f, -1.0f}; }
 };
 static_assert(sizeof(Vector2) == 8);
 
@@ -31,6 +41,18 @@ union alignas(sizeof(float) * 4) Vector3 {
   inline float operator[](int index) const { return data[index]; }
 
   static constexpr int VECTOR_ELEMENT_COUNT = 3;
+  inline static constexpr Vector3 Zero() { return {0.0f, 0.0f, 0.0f}; }
+  inline static constexpr Vector3 One() { return {1.0f, 1.0f, 1.0f}; }
+  inline static constexpr Vector3 Infinity() {
+    return {rainbow::Infinity<float>(), rainbow::Infinity<float>(),
+            rainbow::Infinity<float>()};
+  }
+  inline static constexpr Vector3 PositiveX() { return {1.0f, 0.0f, 0.0f}; }
+  inline static constexpr Vector3 NegativeX() { return {-1.0f, 0.0f, 0.0f}; }
+  inline static constexpr Vector3 PositiveY() { return {0.0f, 1.0f, 0.0f}; }
+  inline static constexpr Vector3 NegativeY() { return {0.0f, -1.0f, 0.0f}; }
+  inline static constexpr Vector3 PositiveZ() { return {0.0f, 0.0f, 1.0f}; }
+  inline static constexpr Vector3 NegativeZ() { return {0.0f, 0.0f, -1.0f}; }
 };
 static_assert(sizeof(Vector3) == 16);
 
@@ -47,6 +69,36 @@ union alignas(sizeof(float) * 4) Vector4 {
   inline float operator[](int index) const { return data[index]; }
 
   static constexpr int VECTOR_ELEMENT_COUNT = 4;
+  inline static constexpr Vector4 Zero() { return {0.0f, 0.0f, 0.0f, 0.0f}; }
+  inline static constexpr Vector4 One() { return {1.0f, 1.0f, 1.0f, 1.0f}; }
+  inline static constexpr Vector4 Infinity() {
+    return {rainbow::Infinity<float>(), rainbow::Infinity<float>(),
+            rainbow::Infinity<float>(), rainbow::Infinity<float>()};
+  }
+  inline static constexpr Vector4 PositiveX() {
+    return {1.0f, 0.0f, 0.0f, 0.0f};
+  }
+  inline static constexpr Vector4 NegativeX() {
+    return {-1.0f, 0.0f, 0.0f, 0.0f};
+  }
+  inline static constexpr Vector4 PositiveY() {
+    return {0.0f, 1.0f, 0.0f, 0.0f};
+  }
+  inline static constexpr Vector4 NegativeY() {
+    return {0.0f, -1.0f, 0.0f, 0.0f};
+  }
+  inline static constexpr Vector4 PositiveZ() {
+    return {0.0f, 0.0f, 1.0f, 0.0f};
+  }
+  inline static constexpr Vector4 NegativeZ() {
+    return {0.0f, 0.0f, -1.0f, 0.0f};
+  }
+  inline static constexpr Vector4 PositiveW() {
+    return {0.0f, 0.0f, 0.0f, 1.0f};
+  }
+  inline static constexpr Vector4 NegativeW() {
+    return {0.0f, 0.0f, 0.0f, -1.0f};
+  }
 };
 static_assert(sizeof(Vector4) == 16);
 
@@ -80,6 +132,15 @@ inline VectorType& operator+=(VectorType& lhs, const VectorType& rhs) {
     lhs[i] += rhs[i];
   }
   return lhs;
+}
+template <typename VectorType,
+          int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
+inline VectorType operator-(const VectorType& rhs) {
+  VectorType result;
+  for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
+    result[i] = -rhs[i];
+  }
+  return result;
 }
 template <typename VectorType,
           int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
@@ -175,8 +236,11 @@ inline float Dot(const VectorType& lhs, const VectorType& rhs) {
 }
 
 inline Vector3 Cross(const Vector3& lhs, const Vector3& rhs) {
-  // TODO: actually implement this
-  return {0.0f, 0.0f, 0.0f};
+  // clang-format off
+  return {lhs.y * rhs.z - rhs.y * lhs.z,
+		  lhs.z * rhs.x - rhs.z * lhs.x,
+		  lhs.x * rhs.y - rhs.x * lhs.y};
+  // clang-format on
 }
 
 }  // namespace rainbow

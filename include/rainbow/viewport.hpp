@@ -9,7 +9,7 @@ namespace rainbow {
 class Viewport {
  public:
   Viewport(size_t width, size_t height,
-           Vector4 initial_color = Vector4{0.0f, 0.0f, 0.0f, 0.0f});
+           Vector4 initial_color = Vector4::Zero());
 
   inline size_t GetWidth() const { return width_; }
   inline size_t GetHeight() const { return height_; }

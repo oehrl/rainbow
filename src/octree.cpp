@@ -14,12 +14,8 @@ Octree::Octree(const Vector3* vertices, size_t vertex_count, size_t max_depth,
       max_depth_(max_depth),
       triangles_per_cell_(triangles_per_cell) {
   root_.depth = 0;
-  root_.aabb.min = Vector3{std::numeric_limits<float>::infinity(),
-                           std::numeric_limits<float>::infinity(),
-                           std::numeric_limits<float>::infinity()};
-  root_.aabb.max = Vector3{-std::numeric_limits<float>::infinity(),
-                           -std::numeric_limits<float>::infinity(),
-                           -std::numeric_limits<float>::infinity()};
+  root_.aabb.min = Vector3::Infinity();
+  root_.aabb.max = -Vector3::Infinity();
 
   for (size_t i = 0; i < vertex_count; ++i) {
     root_.aabb.min.x = std::min(root_.aabb.min.x, vertices[i].x);
