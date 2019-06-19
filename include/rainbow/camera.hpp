@@ -14,41 +14,40 @@ namespace rainbow {
 class Camera {
  public:
   void ComputeViewDirections(glm::uvec2 resolution,
-                             std::vector<glm::vec3>* ray_buffer) const;
-  inline std::vector<glm::vec3> ComputeViewDirections(
+                             std::vector<Vector3>* ray_buffer) const;
+  inline std::vector<Vector3> ComputeViewDirections(
       glm::uvec2 resolution) const {
-    std::vector<glm::vec3> directions;
+    std::vector<Vector3> directions;
     ComputeViewDirections(resolution, &directions);
     return directions;
   }
 
-  inline void Move(const glm::vec3& offset) { position_ += offset; }
-  inline glm::vec3 GetPosition() const { return position_; }
+  inline void Move(const Vector3& offset) { position_ += offset; }
+  inline Vector3 GetPosition() const { return position_; }
 
   void Rotate(float yaw, float pitch);
-  void GetAxisVectors(glm::vec3* right, glm::vec3* up,
-                      glm::vec3* forward) const;
+  void GetAxisVectors(Vector3* right, Vector3* up, Vector3* forward) const;
 
-  inline glm::vec3 GetRightVector() const {
-    glm::vec3 right;
+  inline Vector3 GetRightVector() const {
+    Vector3 right;
     GetAxisVectors(&right, nullptr, nullptr);
     return right;
   }
 
-  inline glm::vec3 GetUpVector() const {
-    glm::vec3 up;
+  inline Vector3 GetUpVector() const {
+    Vector3 up;
     GetAxisVectors(nullptr, &up, nullptr);
     return up;
   }
 
-  inline glm::vec3 GetForwardVector() const {
-    glm::vec3 forward;
+  inline Vector3 GetForwardVector() const {
+    Vector3 forward;
     GetAxisVectors(nullptr, nullptr, &forward);
     return forward;
   }
 
  private:
-  glm::vec3 position_ = glm::vec3{0.0f, 1.0f, 10.0f};
+  Vector3 position_ = Vector3{0.0f, 1.0f, 10.0f};
   float yaw_ = glm::pi<float>();
   float pitch_ = 0.0f;
   float vertical_field_of_view_ = glm::half_pi<float>();

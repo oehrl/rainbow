@@ -1,10 +1,10 @@
 #pragma once
 
-#include "rainbow/rendering_backend.hpp"
 #include <memory>
+#include "rainbow/rendering_backend.hpp"
 
 namespace rainbow {
 
 std::unique_ptr<RenderingBackend> MakeMetalBackend();
 
-} // namespace rainbow
+}  // namespace rainbow

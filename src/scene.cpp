@@ -14,11 +14,11 @@ namespace rainbow {
 
 namespace {
 
-inline glm::vec3 ConvertAssimpVectorToGLM(const aiVector3D& vector) {
+inline Vector3 ConvertAssimpVectorToGLM(const aiVector3D& vector) {
   return {vector.x, vector.y, vector.z};
 }
 
-inline glm::vec4 ConvertAssimpColorToGLM(const aiColor4D& color) {
+inline Vector4 ConvertAssimpColorToGLM(const aiColor4D& color) {
   return {color.r, color.g, color.b, color.a};
 }
 
@@ -36,48 +36,50 @@ bool Scene::Load(const std::string& filename) {
   };
   RAINBOW_TIME_SECTION("ConvertData") {
     materials_.resize(0);
-    vertices_.resize(0);
+    vertex_positions_.resize(0);
     triangles_.resize(0);
 
     materials_.reserve(scene_->mNumMaterials);
     for (unsigned int i = 0; i < scene_->mNumMaterials; ++i) {
       const auto& material = scene_->mMaterials[i];
-      aiColor4D color;
-      material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-      materials_.push_back({ConvertAssimpColorToGLM(color)});
+      aiColor4D diffuse_color;
+      aiColor4D emissive_color;
+      material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color);
+      material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive_color);
+      materials_.push_back({ConvertAssimpColorToGLM(diffuse_color)});
     }
 
     for (unsigned int i = 0; i < scene_->mNumMeshes; ++i) {
       const auto mesh = scene_->mMeshes[i];
 
-      const uint32_t base_vertex = vertices_.size();
+      const uint32_t base_vertex = vertex_positions_.size();
       const uint32_t base_index = triangles_.size() * 3;
       const uint32_t triangle_count = mesh->mNumFaces;
 
-      vertices_.reserve(vertices_.size() + mesh->mNumVertices);
+      vertex_positions_.reserve(vertex_positions_.size() + mesh->mNumVertices);
       triangles_.reserve(triangles_.size() + mesh->mNumFaces);
 
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
-        vertices_.push_back({ConvertAssimpVectorToGLM(mesh->mVertices[j])});
+        vertex_positions_.push_back(
+            {ConvertAssimpVectorToGLM(mesh->mVertices[j])});
       }
 
       for (unsigned int j = 0; j < mesh->mNumFaces; ++j) {
         const auto& face = mesh->mFaces[j];
         assert(face.mNumIndices == 3);
 
-        triangles_.push_back({{
-                                  base_vertex + face.mIndices[0],
-                                  base_vertex + face.mIndices[1],
-                                  base_vertex + face.mIndices[2],
-                              },
-                              mesh->mMaterialIndex});
+        TriangleReference triangle{
+            base_vertex + face.mIndices[0], base_vertex + face.mIndices[1],
+            base_vertex + face.mIndices[2], mesh->mMaterialIndex};
+
+        triangles_.push_back(triangle);
       }
     }
   };
 
   RAINBOW_TIME_SECTION("Compute octree") {
-    octree_ =
-        std::make_unique<Octree>(vertices_.data(), vertices_.size(), 6, 200);
+    octree_ = std::make_unique<Octree>(vertex_positions_.data(),
+                                       vertex_positions_.size(), 6, 200);
     for (const auto& triangle : triangles_) {
       octree_->InsertTriangle(triangle);
     }
@@ -96,12 +98,12 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
 
   for (const auto& triangle : triangles_) {
     const auto intersection =
-        ComputeRayTriangleIntersection(ray, GetTriangle(triangle));
+        ComputeRayTriangleIntersection(ray, ConstructTriangle(triangle));
     if (intersection && intersection->distance >= 0.0f &&
         (!hitpoint || hitpoint->distance > intersection->distance)) {
       hitpoint =
           HitPoint{intersection->distance, intersection->intersection_point,
-                   glm::vec3{}, &materials_[triangle.material_index]};
+                   Vector3{}, &materials_[triangle.material_index]};
     }
   }
 

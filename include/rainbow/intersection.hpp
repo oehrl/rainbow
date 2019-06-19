@@ -6,74 +6,74 @@
 #include <glm/vec3.hpp>
 #include <glm/vector_relational.hpp>
 #include <optional>
+#include "rainbow/vector.hpp"
 
 namespace rainbow {
 
 struct Ray {
-  glm::vec3 origin;
-  glm::vec3 direction;
+  Vector3 origin;
+  Vector3 direction;
 };
 
 struct Triangle {
-  glm::vec3 vertices[3];
+  Vector3 vertices[3];
 };
 
-inline glm::vec3 CalculateCenter(const Triangle& triangle) {
+inline Vector3 CalculateCenter(const Triangle& triangle) {
   constexpr float ONE_THIRD = 1.0f / 3.0f;
   return ONE_THIRD *
          (triangle.vertices[0] + triangle.vertices[1] + triangle.vertices[2]);
 }
 
-inline glm::vec3 CalculateNormal(const Triangle& triangle) {
-  return glm::normalize(
-      glm::cross(triangle.vertices[1] - triangle.vertices[0],
-                 triangle.vertices[2] - triangle.vertices[0]));
+inline Vector3 CalculateNormal(const Triangle& triangle) {
+  return Normalize(Cross(triangle.vertices[1] - triangle.vertices[0],
+                         triangle.vertices[2] - triangle.vertices[0]));
 }
 
 struct AxisAlignedBoundingBox {
-  glm::vec3 min;
-  glm::vec3 max;
+  Vector3 min;
+  Vector3 max;
 };
 
-inline glm::vec3 CalculateExtend(const AxisAlignedBoundingBox& aabb) {
-  assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
+inline Vector3 CalculateExtend(const AxisAlignedBoundingBox& aabb) {
+  // assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
   return aabb.max - aabb.min;
 }
 
-inline glm::vec3 CalculateHalfExtend(const AxisAlignedBoundingBox& aabb) {
-  assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
+inline Vector3 CalculateHalfExtend(const AxisAlignedBoundingBox& aabb) {
+  // assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
   return CalculateExtend(aabb) * 0.5f;
 }
 
-inline glm::vec3 CalculateCenter(const AxisAlignedBoundingBox& aabb) {
-  assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
+inline Vector3 CalculateCenter(const AxisAlignedBoundingBox& aabb) {
+  // assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
   return (aabb.min + aabb.max) * 0.5f;
 }
 
-inline std::array<glm::vec3, 8> CalculateVertexPositions(
+inline std::array<Vector3, 8> CalculateVertexPositions(
     const AxisAlignedBoundingBox& aabb) {
-  assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
+  // assert(glm::all(glm::lessThanEqual(aabb.min, aabb.max)));
   const auto center = CalculateCenter(aabb);
   const auto half_extend = CalculateHalfExtend(aabb);
 
   // clang-format off
   return {
-    center + (glm::vec3{-1.0f, -1.0f, -1.0f} * half_extend),
-    center + (glm::vec3{-1.0f, -1.0f,  1.0f} * half_extend),
-    center + (glm::vec3{-1.0f,  1.0f, -1.0f} * half_extend),
-    center + (glm::vec3{-1.0f,  1.0f,  1.0f} * half_extend),
-    center + (glm::vec3{ 1.0f, -1.0f, -1.0f} * half_extend),
-    center + (glm::vec3{ 1.0f, -1.0f,  1.0f} * half_extend),
-    center + (glm::vec3{ 1.0f,  1.0f, -1.0f} * half_extend),
-    center + (glm::vec3{ 1.0f,  1.0f,  1.0f} * half_extend)
+    center + (Vector3{-1.0f, -1.0f, -1.0f} * half_extend),
+    center + (Vector3{-1.0f, -1.0f,  1.0f} * half_extend),
+    center + (Vector3{-1.0f,  1.0f, -1.0f} * half_extend),
+    center + (Vector3{-1.0f,  1.0f,  1.0f} * half_extend),
+    center + (Vector3{ 1.0f, -1.0f, -1.0f} * half_extend),
+    center + (Vector3{ 1.0f, -1.0f,  1.0f} * half_extend),
+    center + (Vector3{ 1.0f,  1.0f, -1.0f} * half_extend),
+    center + (Vector3{ 1.0f,  1.0f,  1.0f} * half_extend)
   };
   // clang-format on
 }
 
 struct RayTriangleIntersection {
-  glm::vec3 intersection_point;
+  Vector3 intersection_point;
+  Vector3 barycentric_coordinates;
   float distance;
-  glm::vec3 barycentric_coordinates;
 };
 
 std::optional<RayTriangleIntersection> ComputeRayTriangleIntersection(

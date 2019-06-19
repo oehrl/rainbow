@@ -26,6 +26,8 @@ add_executable(rainbow
   src/thread_pool.cpp
   src/integral_range.cpp
   src/parallel.cpp
+  src/vector.cpp
+  src/data_structures.cpp
 )
 
 set_target_properties(rainbow

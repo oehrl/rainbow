@@ -15,9 +15,9 @@ void CPUBackend::Prepare(const Scene& scene, size_t viewport_width,
 }
 
 void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
-  glm::vec3 right;
-  glm::vec3 up;
-  glm::vec3 forward;
+  Vector3 right;
+  Vector3 up;
+  Vector3 forward;
   camera.GetAxisVectors(&right, &up, &forward);
 
   const size_t viewport_width = viewport->GetWidth();
@@ -32,13 +32,13 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
             static_cast<float>(x) / (viewport_width - 1) - 0.5f;
 
         const auto view_ray_direction =
-            glm::normalize(x_normalized * right + y_normalized * up + forward);
+            Normalize(x_normalized * right + y_normalized * up + forward);
 
         const auto hitpoint =
             scene_->ShootRay({camera.GetPosition(), view_ray_direction});
 
         if (hitpoint) {
-          viewport->SetPixel(x, y, hitpoint->material->diffuse);
+          viewport->SetPixel(x, y, hitpoint->material->diffuse_color);
         }
       }
     });
