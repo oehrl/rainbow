@@ -120,7 +120,7 @@ void Application::ProcessEvent(const SDL_Event& event) {
 
 void Application::RenderPreview() {
   RAINBOW_TIME_FUNCTION();
-  viewport_.Clear(glm::vec4{0});
+  viewport_.Clear(Vector4{0, 0, 0, 0});
   rendering_backend_->Render(camera_, &viewport_);
 
   uint8_t* pixels;
@@ -152,12 +152,12 @@ void Application::EnterInteractiveMode() {
 }
 
 void Application::Update(std::chrono::duration<float> elapsed_time) {
-  glm::vec3 move_vector{0.0f, 0.0f, 0.0f};
+  Vector3 move_vector{0.0f, 0.0f, 0.0f};
   const Uint8* keys = SDL_GetKeyboardState(nullptr);
 
-  glm::vec3 right;
-  glm::vec3 up;
-  glm::vec3 forward;
+  Vector3 right;
+  Vector3 up;
+  Vector3 forward;
   camera_.GetAxisVectors(&right, &up, &forward);
 
   if (keys[SDL_SCANCODE_W]) {
@@ -179,7 +179,7 @@ void Application::Update(std::chrono::duration<float> elapsed_time) {
     move_vector -= up;
   }
 
-  float length = glm::length(move_vector);
+  float length = Length(move_vector);
   if (length > std::numeric_limits<float>::epsilon()) {
     camera_.Move(move_vector * (elapsed_time.count() / length));
     redraw_preview_ = true;

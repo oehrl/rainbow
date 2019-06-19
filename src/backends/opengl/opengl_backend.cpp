@@ -73,11 +73,11 @@ void OpenGLBackend::Render(const Camera& camera, Viewport* viewport) {
 
   SDL_GL_MakeCurrent(window_, opengl_context_);
 
-  glm::vec3 right;
-  glm::vec3 up;
-  glm::vec3 forward;
+  Vector3 right;
+  Vector3 up;
+  Vector3 forward;
   camera.GetAxisVectors(&right, &up, &forward);
-  glm::vec3 camera_position = camera.GetPosition();
+  Vector3 camera_position = camera.GetPosition();
 
   view_ray_tracing_program_->Use();
   output_texture_->BindImage(0, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);

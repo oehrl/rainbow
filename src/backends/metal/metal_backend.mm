@@ -72,26 +72,26 @@ void MetalBackend::Prepare(const Scene &scene, size_t viewport_width,
     parameters_buffer_ = [device_ newBufferWithLength:sizeof(parameters_) options:MTLResourceCPUCacheModeWriteCombined];
     
     const auto& materials = scene.GetMaterials();
-    material_buffer_ = [device_ newBufferWithBytes:materials.data() length:materials.size() * sizeof(Scene::Material) options:MTLResourceCPUCacheModeWriteCombined];
+    material_buffer_ = [device_ newBufferWithBytes:materials.data() length:materials.size() * sizeof(Material) options:MTLResourceCPUCacheModeWriteCombined];
     
     
-    const auto& vertices = scene.GetVertices();
-    vertex_buffer_ = [device_ newBufferWithBytes:vertices.data() length:vertices.size() * sizeof(Scene::Vertex) options:MTLResourceCPUCacheModeWriteCombined];
+    const auto& vertices = scene.GetVertexPositions();
+    vertex_buffer_ = [device_ newBufferWithBytes:vertices.data() length:vertices.size() * sizeof(Vector3) options:MTLResourceCPUCacheModeWriteCombined];
     
     const auto& triangles = scene.GetTriangles();
-    triangle_buffer_ = [device_ newBufferWithBytes:triangles.data() length:triangles.size() * sizeof(Scene::Triangle) options:MTLResourceCPUCacheModeWriteCombined];
+    triangle_buffer_ = [device_ newBufferWithBytes:triangles.data() length:triangles.size() * sizeof(TriangleReference) options:MTLResourceCPUCacheModeWriteCombined];
     
     parameters_.triangle_count = triangles.size();
     parameters_.resolution = simd_make_float2(viewport_width, viewport_height);
 }
 
 void MetalBackend::Render(const Camera &camera, Viewport *viewport) {
-    glm::vec3 right;
-    glm::vec3 up;
-    glm::vec3 forward;
+    Vector3 right;
+    Vector3 up;
+    Vector3 forward;
     camera.GetAxisVectors(&right, &up, &forward);
     
-   const glm::vec3 camera_position = camera.GetPosition();
+   const Vector3 camera_position = camera.GetPosition();
     
     parameters_.right = simd_make_float3(right.x, right.y, right.z);
     parameters_.up = simd_make_float3(up.x, up.y, up.z);
@@ -135,7 +135,7 @@ void MetalBackend::Render(const Camera &camera, Viewport *viewport) {
 
   [command_buffer waitUntilCompleted];
   [output_texture_ getBytes:viewport->GetPixels()
-                bytesPerRow:viewport->GetWidth() * sizeof(glm::vec4)
+                bytesPerRow:viewport->GetWidth() * sizeof(Vector4)
                  fromRegion:MTLRegionMake2D(0, 0, viewport->GetWidth(),
                                             viewport->GetHeight())
                 mipmapLevel:0];

@@ -9,7 +9,7 @@
 namespace rainbow {
 
 void Camera::ComputeViewDirections(
-    glm::uvec2 resolution, std::vector<glm::vec3>* direction_buffer) const {
+    glm::uvec2 resolution, std::vector<Vector3>* direction_buffer) const {
   assert(direction_buffer != nullptr);
   const auto directions_count = resolution.x * resolution.y;
   direction_buffer->resize(0);
@@ -21,9 +21,9 @@ void Camera::ComputeViewDirections(
   //     std::isnan(vertical_field_of_view)) {
   // }
 
-  glm::vec3 right;
-  glm::vec3 up;
-  glm::vec3 forward;
+  Vector3 right;
+  Vector3 up;
+  Vector3 forward;
   GetAxisVectors(&right, &up, &forward);
 
   for (unsigned y = 0; y < resolution.y; ++y) {
@@ -36,7 +36,7 @@ void Camera::ComputeViewDirections(
       const auto ray_direction =
           x_normalized * right + y_normalized * up + forward;
 
-      direction_buffer->push_back(glm::normalize(ray_direction));
+      direction_buffer->push_back(Normalize(ray_direction));
     }
   }
 }
@@ -46,17 +46,23 @@ void Camera::Rotate(float yaw, float pitch) {
   pitch_ += pitch;
 }
 
-void Camera::GetAxisVectors(glm::vec3* right, glm::vec3* up,
-                            glm::vec3* forward) const {
+void Camera::GetAxisVectors(Vector3* right, Vector3* up,
+                            Vector3* forward) const {
   glm::mat4 rotation_matrix = glm::yawPitchRoll(yaw_, pitch_, 0.0f);
   if (right != nullptr) {
-    *right = rotation_matrix[0];
+    for (int i = 0; i < 3; ++i) {
+      (*right)[i] = rotation_matrix[0][i];
+    }
   }
   if (up != nullptr) {
-    *up = rotation_matrix[1];
+    for (int i = 0; i < 3; ++i) {
+      (*up)[i] = rotation_matrix[1][i];
+    }
   }
   if (forward != nullptr) {
-    *forward = rotation_matrix[2];
+    for (int i = 0; i < 3; ++i) {
+      (*forward)[i] = rotation_matrix[2][i];
+    }
   }
 }
 
