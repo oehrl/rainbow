@@ -7,20 +7,31 @@ namespace rainbow {
 
 std::optional<RayTriangleIntersection> ComputeRayTriangleIntersection(
     const Ray& ray, const Triangle& triangle) {
-  return {};
-  // glm::vec2 barycentric_coordinates;
-  // float distance;
-  // if (glm::intersectRayTriangle(ray.origin, ray.direction,
-  // triangle.vertices[0],
-  //                               triangle.vertices[1], triangle.vertices[2],
-  //                               barycentric_coordinates, distance)) {
-  //   return RayTriangleIntersection{
-  //       ray.origin + distance * ray.direction, distance,
-  //       Vector3{barycentric_coordinates, 1.0f - barycentric_coordinates.x -
-  //                                              barycentric_coordinates.y}};
-  // } else {
-  //   return {};
-  // }
+  const auto v0v1 = triangle.vertices[1] - triangle.vertices[0];
+  const auto v0v2 = triangle.vertices[2] - triangle.vertices[0];
+  const auto p_vector = Cross(ray.direction, v0v2);
+  const float determinant = Dot(v0v1, p_vector);
+  if (std::abs(determinant) <= std::numeric_limits<float>::epsilon()) {
+    return {};
+  }
+  const float inverse_determinant = 1.0f / determinant;
+  const Vector3 t_vector = ray.origin - triangle.vertices[0];
+  const float u = inverse_determinant * Dot(t_vector, p_vector);
+  if (u < 0.0f || u > 1.0f) {
+    return {};
+  }
+  const Vector3 q_vector = Cross(t_vector, v0v1);
+  const float v = inverse_determinant * Dot(ray.direction, q_vector);
+  if (v < 0.0f || u + v > 1.0f) {
+    return {};
+  }
+  const float t = Dot(v0v2, q_vector) / inverse_determinant;
+  if (t < 0.0f) {
+    return {};
+  }
+
+  return RayTriangleIntersection{
+      ray.origin + t * ray.direction, {u, v, 1.0f - u - v}, t};
 }
 
 bool CheckForTriangleAxisAlignedBoundingBoxIntersection(
@@ -29,8 +40,8 @@ bool CheckForTriangleAxisAlignedBoundingBoxIntersection(
                     float* max) {
     assert(min != nullptr);
     assert(max != nullptr);
-    *min = std::numeric_limits<float>::infinity();
-    *max = -std::numeric_limits<float>::infinity();
+    *min = Infinity<float>();
+    *max = -Infinity<float>();
     for (const auto& p : points) {
       float axis_dot_p = Dot(axis, p);
       if (axis_dot_p < *min) *min = axis_dot_p;
@@ -39,8 +50,12 @@ bool CheckForTriangleAxisAlignedBoundingBoxIntersection(
   };
 
   // Test the box normals (x-, y- and z-axes)
-  const Vector3 aabb_normals[]{Vector3{1, 0, 0}, Vector3{0, 1, 0},
-                               Vector3{0, 0, 1}};
+  // clang-format off
+  const Vector3 aabb_normals[]{
+    Vector3::PositiveX(),
+    Vector3::PositiveY(),
+    Vector3::PositiveZ()};
+  // clang-format on
   for (int i = 0; i < 3; i++) {
     float triangle_min, triangle_max;
     project(triangle.vertices, aabb_normals[i], &triangle_min, &triangle_max);

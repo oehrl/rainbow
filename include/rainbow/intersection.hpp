@@ -6,6 +6,7 @@
 #include <glm/vec3.hpp>
 #include <glm/vector_relational.hpp>
 #include <optional>
+#include "rainbow/constants.hpp"
 #include "rainbow/vector.hpp"
 
 namespace rainbow {
