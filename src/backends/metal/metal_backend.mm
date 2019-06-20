@@ -37,16 +37,36 @@ MetalBackend::MetalBackend() : device_{MTLCreateSystemDefaultDevice()} {
      }
   assert(library_);
 
-  view_ray_function_ = [library_ newFunctionWithName:@"ShootViewRays"];
-  assert(view_ray_function_);
-
-  compute_pipeline_state_ =
-      [device_ newComputePipelineStateWithFunction:view_ray_function_
-                                             error:&error];
-  ThrowOnError(error);
+  generate_hitpoints_function_ = [library_ newFunctionWithName:@"GenerateHitpoints"];
+  assert(generate_hitpoints_function_);
+    
+    generate_hitpoints_pipeline_state_ =
+    [device_ newComputePipelineStateWithFunction:generate_hitpoints_function_
+                                           error:&error];
+    ThrowOnError(error);
+    
+    evaluate_radiance_function_ = [library_ newFunctionWithName:@"EvaluateRadiance"];
+    assert(evaluate_radiance_function_);
+    
+    evaluate_radiance_pipeline_state_ =
+    [device_ newComputePipelineStateWithFunction:evaluate_radiance_function_
+                                           error:&error];
+    ThrowOnError(error);
+    
+    clear_texture_function_ = [library_ newFunctionWithName:@"ClearTexture"];
+    assert(clear_texture_function_);
+    
+    clear_texture_pipeline_state_ =
+    [device_ newComputePipelineStateWithFunction:clear_texture_function_
+                                           error:&error];
+    ThrowOnError(error);
 
   command_queue_ = [device_ newCommandQueue];
   assert(command_queue_);
+    
+    parameters_buffer_ = [device_ newBufferWithLength:sizeof(parameters_) options:MTLResourceCPUCacheModeWriteCombined];
+    
+    hitpoint_counter_buffer_ = [device_ newBufferWithLength:4 options:MTLResourceCPUCacheModeWriteCombined];
 }
 
 void MetalBackend::Prepare(const Scene &scene, size_t viewport_width,
@@ -69,8 +89,6 @@ void MetalBackend::Prepare(const Scene &scene, size_t viewport_width,
   [texture_descriptor release];
     
     
-    parameters_buffer_ = [device_ newBufferWithLength:sizeof(parameters_) options:MTLResourceCPUCacheModeWriteCombined];
-    
     const auto& materials = scene.GetMaterials();
     material_buffer_ = [device_ newBufferWithBytes:materials.data() length:materials.size() * sizeof(Material) options:MTLResourceCPUCacheModeWriteCombined];
     
@@ -81,8 +99,13 @@ void MetalBackend::Prepare(const Scene &scene, size_t viewport_width,
     const auto& triangles = scene.GetTriangles();
     triangle_buffer_ = [device_ newBufferWithBytes:triangles.data() length:triangles.size() * sizeof(TriangleReference) options:MTLResourceCPUCacheModeWriteCombined];
     
+    uint32 hitpoint_buffer_entries = viewport_width * viewport_height;
+    uint32 hitpoint_buffer_size = hitpoint_buffer_entries * 64;
+    hitpoint_buffer_ = [device_ newBufferWithLength:hitpoint_buffer_size options:MTLResourceStorageModePrivate];
+    
     parameters_.triangle_count = triangles.size();
     parameters_.resolution = simd_make_float2(viewport_width, viewport_height);
+    parameters_.max_hitpoint_count = hitpoint_buffer_entries;
 }
 
 void MetalBackend::Render(const Camera &camera, Viewport *viewport) {
@@ -99,21 +122,26 @@ void MetalBackend::Render(const Camera &camera, Viewport *viewport) {
     parameters_.camera_position = simd_make_float3(camera_position.x, camera_position.y, camera_position.z);
     memcpy([parameters_buffer_ contents], &parameters_, sizeof(parameters_));
     
+    const uint32 initial_hitpoint_counter_value = 0;
+    memcpy([hitpoint_counter_buffer_ contents], &initial_hitpoint_counter_value, sizeof(initial_hitpoint_counter_value));
+    
   id<MTLCommandBuffer> command_buffer = [command_queue_ commandBuffer];
   assert(command_buffer);
 
   id<MTLComputeCommandEncoder> compute_encoder =
       [command_buffer computeCommandEncoder];
   assert(compute_encoder);
-
-  [compute_encoder setComputePipelineState:compute_pipeline_state_];
-
-  [compute_encoder setTexture:output_texture_ atIndex:0];
+    
+    [compute_encoder setTexture:output_texture_ atIndex:0];
     [compute_encoder setBuffer:parameters_buffer_ offset:0 atIndex:0];
     [compute_encoder setBuffer:material_buffer_ offset:0 atIndex:1];
     [compute_encoder setBuffer:vertex_buffer_ offset:0 atIndex:2];
     [compute_encoder setBuffer:triangle_buffer_ offset:0 atIndex:3];
+    [compute_encoder setBuffer:hitpoint_counter_buffer_ offset:0 atIndex:4];
+    [compute_encoder setBuffer:hitpoint_buffer_ offset:0 atIndex:5];
 
+    {
+        [compute_encoder setComputePipelineState:generate_hitpoints_pipeline_state_];
   MTLSize thread_group_size = MTLSizeMake(16, 16, 1);
   MTLSize thread_group_count;
   thread_group_count.width =
@@ -125,6 +153,34 @@ void MetalBackend::Render(const Camera &camera, Viewport *viewport) {
   thread_group_count.depth = 1;
   [compute_encoder dispatchThreadgroups:thread_group_count
                   threadsPerThreadgroup:thread_group_size];
+    }
+    {
+        [compute_encoder setComputePipelineState:clear_texture_pipeline_state_];
+        MTLSize thread_group_size = MTLSizeMake(16, 16, 1);
+        MTLSize thread_group_count;
+        thread_group_count.width =
+        (viewport->GetWidth() + thread_group_size.width - 1) /
+        thread_group_size.width;
+        thread_group_count.height =
+        (viewport->GetHeight() + thread_group_size.height - 1) /
+        thread_group_size.height;
+        thread_group_count.depth = 1;
+        [compute_encoder dispatchThreadgroups:thread_group_count
+                        threadsPerThreadgroup:thread_group_size];
+    }
+    {
+        uint32 hitpoint_count;
+        memcpy(&hitpoint_count, [hitpoint_counter_buffer_ contents], sizeof(hitpoint_count));
+        std::cout << "Number of hitpoints: " << hitpoint_count << std::endl;
+        
+        
+    [compute_encoder setComputePipelineState:evaluate_radiance_pipeline_state_];
+        NSUInteger pixel_count = viewport->GetWidth() * viewport->GetHeight();
+        MTLSize thread_group_size = MTLSizeMake(64, 1, 1);
+        MTLSize thread_group_count = MTLSizeMake((pixel_count + thread_group_size.width - 1) /
+                                                 thread_group_size.width, 1, 1);
+        [compute_encoder dispatchThreadgroups:thread_group_count threadsPerThreadgroup:thread_group_size];
+    }
   [compute_encoder endEncoding];
 
   id<MTLBlitCommandEncoder> blit_encoder = [command_buffer blitCommandEncoder];
