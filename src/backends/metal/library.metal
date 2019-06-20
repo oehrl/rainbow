@@ -14,6 +14,7 @@ struct Parameters {
 
 struct Material {
     float4 diffuse_color;
+    float4 emissive_color;
 };
 
 struct Hitpoint {
@@ -100,7 +101,7 @@ kernel void EvaluateRadiance(uint                            gid            [[th
         return;
     }
     constant const Material& material = materials[hitpoints[gid].material_index];
-    out_texture.write(material.diffuse_color, hitpoints[gid].pixel_location);
+    out_texture.write(material.diffuse_color + material.emissive_color, hitpoints[gid].pixel_location);
 }
 
 //kernel void ShootViewRays(texture2d<float, access::write> out_texture [[texture(0)]],

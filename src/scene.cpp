@@ -22,6 +22,10 @@ inline Vector4 ConvertAssimpColorToGLM(const aiColor4D& color) {
   return {color.r, color.g, color.b, color.a};
 }
 
+inline bool IsBlack(const Vector4& color) {
+  return color.x <= 0.0f && color.y <= 0.0f && color.z <= 0.0f;
+}
+
 }  // namespace
 
 Scene::Scene() : scene_{nullptr} {}
@@ -30,9 +34,7 @@ bool Scene::Load(const std::string& filename) {
   RAINBOW_TIME_SECTION("ReadFile()") {
     importer_.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
                                  aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-    scene_ = importer_.ReadFile(filename, aiProcess_Triangulate |
-                                              aiProcess_GenNormals |
-                                              aiProcess_SortByPType);
+    scene_ = importer_.ReadFile(filename, aiProcess_Triangulate);
   };
   RAINBOW_TIME_SECTION("ConvertData") {
     materials_.resize(0);
@@ -46,7 +48,8 @@ bool Scene::Load(const std::string& filename) {
       aiColor4D emissive_color;
       material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color);
       material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive_color);
-      materials_.push_back({ConvertAssimpColorToGLM(diffuse_color)});
+      materials_.push_back({ConvertAssimpColorToGLM(diffuse_color),
+                            ConvertAssimpColorToGLM(emissive_color)});
     }
 
     for (unsigned int i = 0; i < scene_->mNumMeshes; ++i) {
@@ -69,10 +72,15 @@ bool Scene::Load(const std::string& filename) {
         assert(face.mNumIndices == 3);
 
         TriangleReference triangle{
-            base_vertex + face.mIndices[0], base_vertex + face.mIndices[1],
-            base_vertex + face.mIndices[2], mesh->mMaterialIndex};
+            {base_vertex + face.mIndices[0], base_vertex + face.mIndices[1],
+             base_vertex + face.mIndices[2]},
+            mesh->mMaterialIndex};
 
         triangles_.push_back(triangle);
+
+        if (!IsBlack(materials_[triangle.material_index].emissive_color)) {
+          emissive_triangles_.push_back(triangle);
+        }
       }
     }
   };

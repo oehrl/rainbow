@@ -64,6 +64,7 @@ class Scene {
   std::vector<Material> materials_;
   std::vector<Vector3> vertex_positions_;
   std::vector<TriangleReference> triangles_;
+  std::vector<TriangleReference> emissive_triangles_;
   std::unique_ptr<Octree> octree_;
 };
 

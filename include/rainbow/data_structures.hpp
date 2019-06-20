@@ -7,8 +7,9 @@ namespace rainbow {
 
 struct Material {
   Vector4 diffuse_color;
+  Vector4 emissive_color;
 };
-static_assert(sizeof(Material) == 16);
+static_assert(sizeof(Material) == 32);
 
 struct TriangleReference {
   uint32_t vertex_indices[3];
