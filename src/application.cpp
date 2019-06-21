@@ -120,7 +120,7 @@ void Application::ProcessEvent(const SDL_Event& event) {
 
 void Application::RenderPreview() {
   RAINBOW_TIME_FUNCTION();
-  viewport_.Clear(Vector4{0, 0, 0, 0});
+  viewport_.Clear(Vector4::Zero());
   rendering_backend_->Render(camera_, &viewport_);
 
   uint8_t* pixels;
@@ -152,7 +152,7 @@ void Application::EnterInteractiveMode() {
 }
 
 void Application::Update(std::chrono::duration<float> elapsed_time) {
-  Vector3 move_vector{0.0f, 0.0f, 0.0f};
+  auto move_vector = Vector3::Zero();
   const Uint8* keys = SDL_GetKeyboardState(nullptr);
 
   Vector3 right;
