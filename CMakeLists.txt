@@ -29,6 +29,8 @@ add_executable(rainbow
   src/vector.cpp
   src/data_structures.cpp
   src/constants.cpp
+  src/random.cpp
+  src/sampling.cpp
 )
 
 set_target_properties(rainbow
