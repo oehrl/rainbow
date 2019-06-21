@@ -10,6 +10,7 @@
 #include "rainbow/integral_range.hpp"
 #include "rainbow/octree.hpp"
 #include "rainbow/random.hpp"
+#include "rainbow/sampling.hpp"
 #include "rainbow/timing.hpp"
 
 namespace rainbow {
