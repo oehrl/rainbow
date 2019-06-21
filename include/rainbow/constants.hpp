@@ -13,12 +13,22 @@ inline constexpr T Infinity() {
 
 template <typename T>
 inline constexpr T Pi() {
-  return T(M_PI);
+  return T{3.14159265358979323846};
 }
 
 template <typename T>
 inline constexpr T TwoPi() {
-  return 2 * Pi<T>();
+  return T{2} * Pi<T>();
+}
+
+template <typename T>
+inline constexpr T PiOverTwo() {
+  return Pi<T>() / T{2};
+}
+
+template <typename T>
+inline constexpr T PiOverFour() {
+  return Pi<T>() / T{4};
 }
 
 }  // namespace rainbow
