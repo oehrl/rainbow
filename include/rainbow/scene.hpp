@@ -25,7 +25,7 @@ class Scene {
     float distance;
     Vector3 position;
     Vector3 normal;
-    const Material* material;
+    uint32_t material_index;
   };
 
   Scene();
@@ -36,6 +36,10 @@ class Scene {
 
   inline const std::vector<Material>& GetMaterials() const {
     return materials_;
+  }
+
+  inline const Material& GetMaterial(uint32_t index) const {
+    return materials_[index];
   }
 
   inline const std::vector<Vector3>& GetVertexPositions() const {

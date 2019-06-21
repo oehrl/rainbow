@@ -117,7 +117,7 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
         (!hitpoint || hitpoint->distance > intersection->distance)) {
       hitpoint =
           HitPoint{intersection->distance, intersection->intersection_point,
-                   Vector3{}, &materials_[triangle.material_index]};
+                   Vector3{}, triangle.material_index};
     }
   }
 

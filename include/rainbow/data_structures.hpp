@@ -17,6 +17,14 @@ struct TriangleReference {
 };
 static_assert(sizeof(TriangleReference) == 16);
 
+struct Hitpoint {
+  Vector3 position;
+  Vector3 normal;
+  Vector3 direction;
+  uint32_t pixel_location[2];
+  uint32_t material_index;
+};
+
 struct Photon {
   Vector3 position;
   Vector3 direction;

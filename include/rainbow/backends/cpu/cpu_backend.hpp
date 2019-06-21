@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <vector>
 #include "rainbow/data_structures.hpp"
 #include "rainbow/rendering_backend.hpp"
@@ -14,7 +15,13 @@ class CPUBackend final : public RenderingBackend {
 
  private:
   const Scene* scene_;
+  std::mutex hitpoints_mutex_;
+  std::vector<Hitpoint> hitpoints_;
   std::vector<Photon> photon_buffer_;
+
+  void GenerateHitpoints(const Camera& camera, size_t viewport_width,
+                         size_t viewport_height);
+  void EvaluateRadiance(Viewport* viewport);
 };
 
 }  // namespace rainbow
