@@ -7,7 +7,9 @@
 #include <assimp/postprocess.h>
 #include <glm/gtx/string_cast.hpp>
 
+#include "rainbow/integral_range.hpp"
 #include "rainbow/octree.hpp"
+#include "rainbow/random.hpp"
 #include "rainbow/timing.hpp"
 
 namespace rainbow {
@@ -80,6 +82,9 @@ bool Scene::Load(const std::string& filename) {
 
         if (!IsBlack(materials_[triangle.material_index].emissive_color)) {
           emissive_triangles_.push_back(triangle);
+          std::cout << triangle.vertex_indices[0] << ", "
+                    << triangle.vertex_indices[1] << ", "
+                    << triangle.vertex_indices[2] << "\n";
         }
       }
     }
@@ -116,6 +121,45 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
   }
 
   return hitpoint;
+}
+
+void Scene::GeneratePhotons(size_t photon_count,
+                            std::vector<Photon>* photon_buffer) const {
+  assert(photon_buffer != nullptr);
+  photon_buffer->resize(0);
+  photon_buffer->reserve(photon_count);
+
+  std::uniform_int_distribution triangle_index_distribution{
+      static_cast<size_t>(0), emissive_triangles_.size() - 1};
+  std::uniform_real_distribution<float> real_distribution;
+
+  for (auto i : IntegralRange{photon_count}) {
+    (void)i;
+    const auto triangle_index =
+        triangle_index_distribution(default_random_number_engine);
+    const auto barycentric_coord_u =
+        real_distribution(default_random_number_engine);
+    const auto barycentric_coord_v =
+        (1.0f - barycentric_coord_u) *
+        real_distribution(default_random_number_engine);
+    assert(barycentric_coord_u + barycentric_coord_v <= 1.0f);
+
+    const auto triangle =
+        ConstructTriangle(emissive_triangles_[triangle_index]);
+
+    const Vector3 photon_position = {
+        triangle.vertices[0] * barycentric_coord_u +
+        triangle.vertices[1] * barycentric_coord_v +
+        triangle.vertices[2] *
+            (1.0f - barycentric_coord_u - barycentric_coord_v)};
+
+    const Vector3 photon_direction = SampleHemisphereCosineWeighted(
+        real_distribution(default_random_number_engine),
+        real_distribution(default_random_number_engine));
+
+    photon_buffer->push_back({photon_position, photon_direction});
+  }
+  assert(photon_buffer->size() == photon_count);
 }
 
 }  // namespace rainbow

@@ -57,6 +57,9 @@ class Scene {
     };
   }
 
+  void GeneratePhotons(size_t photon_count,
+                       std::vector<Photon>* photon_buffer) const;
+
  private:
   Assimp::Importer importer_;
   const aiScene* scene_;

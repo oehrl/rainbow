@@ -17,4 +17,9 @@ struct TriangleReference {
 };
 static_assert(sizeof(TriangleReference) == 16);
 
+struct Photon {
+  Vector3 position;
+  Vector3 direction;
+};
+
 }  // namespace rainbow
