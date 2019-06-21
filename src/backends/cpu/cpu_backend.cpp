@@ -23,6 +23,19 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   const size_t viewport_width = viewport->GetWidth();
   const size_t viewport_height = viewport->GetHeight();
 
+  RAINBOW_TIME_SECTION("Photon Generation") {
+    scene_->GeneratePhotons(1000, &photon_buffer_);
+  };
+
+  RAINBOW_TIME_SECTION("Photon Tracing") {
+    for (auto& photon : photon_buffer_) {
+      auto intersection = scene_->ShootRay({photon.position, photon.direction});
+      if (intersection) {
+        photon.position = intersection->position;
+      }
+    }
+  };
+
   RAINBOW_TIME_SECTION("CPU Ray Tracing") {
     ParallelFor(viewport_height, [&](size_t y) {
       const float y_normalized =

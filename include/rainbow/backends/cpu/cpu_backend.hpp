@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include "rainbow/data_structures.hpp"
 #include "rainbow/rendering_backend.hpp"
 
 namespace rainbow {
@@ -12,6 +14,7 @@ class CPUBackend final : public RenderingBackend {
 
  private:
   const Scene* scene_;
+  std::vector<Photon> photon_buffer_;
 };
 
 }  // namespace rainbow
