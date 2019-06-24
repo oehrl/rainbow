@@ -110,14 +110,14 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
 
   std::optional<HitPoint> hitpoint;
 
-  for (const auto& triangle : triangles_) {
-    const auto intersection =
-        ComputeRayTriangleIntersection(ray, ConstructTriangle(triangle));
+  for (const auto& triangle_reference : triangles_) {
+    const Triangle triangle = ConstructTriangle(triangle_reference);
+    const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
     if (intersection && intersection->distance >= 0.0f &&
         (!hitpoint || hitpoint->distance > intersection->distance)) {
-      hitpoint =
-          HitPoint{intersection->distance, intersection->intersection_point,
-                   Vector3{}, triangle.material_index};
+      hitpoint = HitPoint{
+          intersection->distance, intersection->intersection_point,
+          CalculateNormal(triangle), triangle_reference.material_index};
     }
   }
 
@@ -154,11 +154,13 @@ void Scene::GeneratePhotons(size_t photon_count,
         triangle.vertices[2] *
             (1.0f - barycentric_coord_u - barycentric_coord_v)};
 
-    const Vector3 photon_direction = SampleHemisphereCosineWeighted(
-        real_distribution(default_random_number_engine),
-        real_distribution(default_random_number_engine));
+    const Vector3 photon_direction = CalculateNormal(triangle);
 
-    photon_buffer->push_back({photon_position, photon_direction});
+    const Material& material =
+        materials_[emissive_triangles_[triangle_index].material_index];
+
+    photon_buffer->push_back(
+        {photon_position, photon_direction, material.emissive_color});
   }
   assert(photon_buffer->size() == photon_count);
 }
