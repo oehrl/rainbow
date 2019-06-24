@@ -31,6 +31,12 @@ inline Vector3 CalculateNormal(const Triangle& triangle) {
                          triangle.vertices[2] - triangle.vertices[0]));
 }
 
+inline float CalculateArea(const Triangle& triangle) {
+  const Vector3 e0 = triangle.vertices[1] - triangle.vertices[0];
+  const Vector3 e1 = triangle.vertices[2] - triangle.vertices[0];
+  return 0.5f * Length(Cross(e0, e1));
+}
+
 struct AxisAlignedBoundingBox {
   Vector3 min;
   Vector3 max;
