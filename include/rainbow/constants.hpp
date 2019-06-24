@@ -31,4 +31,9 @@ inline constexpr T PiOverFour() {
   return Pi<T>() / T{4};
 }
 
+template <typename T>
+inline constexpr T OneOverPi() {
+  return T{1} / Pi<T>();
+}
+
 }  // namespace rainbow
