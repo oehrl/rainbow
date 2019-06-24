@@ -31,6 +31,7 @@ add_executable(rainbow
   src/constants.cpp
   src/random.cpp
   src/sampling.cpp
+  src/photon_map.cpp
 )
 
 set_target_properties(rainbow
