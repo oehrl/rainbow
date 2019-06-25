@@ -21,7 +21,8 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   GenerateHitpoints(camera, viewport_width, viewport_height);
 
   RAINBOW_TIME_SECTION("Photon Generation") {
-    scene_->GeneratePhotons(1000, &photon_buffer_);
+    scene_->GeneratePhotons(10000, &photon_buffer_);
+    emitted_photons_count_ = 10000;
   };
 
   RAINBOW_TIME_SECTION("Photon Tracing") {
@@ -31,6 +32,29 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
         photon.position = intersection->position;
       }
     }
+  };
+
+  RAINBOW_TIME_SECTION("Build Photon Map") {
+    photon_map_.Build(photon_buffer_.data(),
+                      photon_buffer_.data() + photon_buffer_.size());
+  };
+
+  RAINBOW_TIME_SECTION("Estimate radiance") {
+    ParallelForEach(hitpoints_, [this](Hitpoint& hitpoint) {
+      std::vector<Photon> photon_buffer_;
+      hitpoint.radiance_estimate = Vector4::Zero();
+      photon_map_.GetKNearestNeighbors(hitpoint.position, 150, &photon_buffer_);
+      hitpoint.radius =
+          Length(photon_buffer_.back().position - hitpoint.position);
+
+      const Material& material = scene_->GetMaterial(hitpoint.material_index);
+      for (const Photon& photon : photon_buffer_) {
+        const float n_dot_l =
+            std::max(0.0f, Dot(hitpoint.normal, -photon.direction));
+        hitpoint.radiance_estimate += OneOverPi<float>() * n_dot_l *
+                                      photon.color * material.diffuse_color;
+      }
+    });
   };
 
   EvaluateRadiance(viewport);
@@ -66,8 +90,10 @@ void CPUBackend::GenerateHitpoints(const Camera& camera, size_t viewport_width,
             {hitpoint->position,
              hitpoint->normal,
              view_ray_direction,
+             Vector4::Zero(),
              {static_cast<uint32_t>(x), static_cast<uint32_t>(y)},
-             hitpoint->material_index});
+             hitpoint->material_index,
+             1.0f});
       }
     }
   });
@@ -82,7 +108,11 @@ void CPUBackend::EvaluateRadiance(Viewport* viewport) {
     const auto& material = scene_->GetMaterial(hitpoint.material_index);
     viewport->SetPixel(
         hitpoint.pixel_location[0], hitpoint.pixel_location[1],
-        color + material.diffuse_color + material.emissive_color);
+        color +
+            (scene_->GetTotalFlux() * hitpoint.radiance_estimate *
+             (1.0f /
+              (Pi<float>() * hitpoint.radius * hitpoint.radius * 10.0f))) +
+            material.emissive_color);
   }
 }
 

@@ -159,7 +159,7 @@ void Scene::GeneratePhotons(size_t photon_count,
             (1.0f - barycentric_coord_u - barycentric_coord_v)};
 
     const Vector3 z = CalculateNormal(triangle);
-    const Vector3 x = ConstructOrthoconalVector(z);
+    const Vector3 x = ConstructOrthogonalVector(z);
     const Vector3 y = Cross(x, z);
     const Vector3 hemisphere_direction = SampleHemisphereCosineWeighted(
         real_distribution(default_random_number_engine),
