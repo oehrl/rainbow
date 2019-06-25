@@ -205,6 +205,52 @@ inline VectorType operator*=(VectorType& lhs, const VectorType& rhs) {
 
 template <typename VectorType,
           int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
+inline VectorType operator/(const VectorType& lhs, float rhs) {
+  VectorType result;
+  const float inverse = 1.0f / rhs;
+  for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
+    result[i] = lhs[i] * inverse;
+  }
+  return result;
+}
+template <typename VectorType,
+          int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
+inline VectorType operator/(float lhs, const VectorType& rhs) {
+  VectorType result;
+  for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
+    result[i] = lhs / rhs[i];
+  }
+  return result;
+}
+template <typename VectorType,
+          int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
+inline VectorType& operator/=(VectorType& lhs, float rhs) {
+  const float inverse = 1.0f / rhs;
+  for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
+    lhs[i] *= inverse;
+  }
+  return lhs;
+}
+template <typename VectorType,
+          int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
+inline VectorType operator/(const VectorType& lhs, const VectorType& rhs) {
+  VectorType result;
+  for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
+    result[i] = lhs[i] / rhs[i];
+  }
+  return result;
+}
+template <typename VectorType,
+          int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
+inline VectorType operator/=(VectorType& lhs, const VectorType& rhs) {
+  for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
+    lhs[i] /= rhs[i];
+  }
+  return lhs;
+}
+
+template <typename VectorType,
+          int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
 inline float SquaredLength(const VectorType& vector) {
   float result = 0.0f;
   for (int i = 0; i < VECTOR_ELEMENT_COUNT; ++i) {
