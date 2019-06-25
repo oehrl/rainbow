@@ -291,11 +291,11 @@ inline Vector3 Cross(const Vector3& lhs, const Vector3& rhs) {
 
 inline Vector3 ConstructOrthogonalVector(const Vector3& vector) {
   if (std::abs(vector.x) > std::abs(vector.y)) {
-    return (1.0f / std::sqrt(vector.x * vector.x + vector.z * vector.z)) *
-           Vector3{-vector.z, 0.0f, vector.x};
+    return Vector3{-vector.z, 0.0f, vector.x} /
+           std::sqrt(vector.x * vector.x + vector.z * vector.z);
   } else {
-    return (1.0f / std::sqrt(vector.y * vector.y + vector.z * vector.z)) *
-           Vector3{0.0f, vector.z, -vector.y};
+    return Vector3{0.0f, vector.z, -vector.y} /
+           std::sqrt(vector.y * vector.y + vector.z * vector.z);
   }
 }
 
