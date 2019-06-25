@@ -43,6 +43,7 @@ bool Scene::Load(const std::string& filename) {
     materials_.resize(0);
     vertex_positions_.resize(0);
     triangles_.resize(0);
+    total_flux_ = 0.0f;
 
     materials_.reserve(scene_->mNumMaterials);
     for (unsigned int i = 0; i < scene_->mNumMaterials; ++i) {
@@ -81,11 +82,14 @@ bool Scene::Load(const std::string& filename) {
 
         triangles_.push_back(triangle);
 
-        if (!IsBlack(materials_[triangle.material_index].emissive_color)) {
+        const auto emissive_color =
+            materials_[triangle.material_index].emissive_color;
+        if (!IsBlack(emissive_color)) {
           emissive_triangles_.push_back(triangle);
-          std::cout << triangle.vertex_indices[0] << ", "
-                    << triangle.vertex_indices[1] << ", "
-                    << triangle.vertex_indices[2] << "\n";
+          // TODO: calculate this correctly
+          total_flux_ +=
+              (emissive_color.x + emissive_color.y + emissive_color.z) *
+              CalculateArea(ConstructTriangle(triangle));
         }
       }
     }
@@ -154,7 +158,15 @@ void Scene::GeneratePhotons(size_t photon_count,
         triangle.vertices[2] *
             (1.0f - barycentric_coord_u - barycentric_coord_v)};
 
-    const Vector3 photon_direction = CalculateNormal(triangle);
+    const Vector3 z = CalculateNormal(triangle);
+    const Vector3 x = ConstructOrthoconalVector(z);
+    const Vector3 y = Cross(x, z);
+    const Vector3 hemisphere_direction = SampleHemisphereCosineWeighted(
+        real_distribution(default_random_number_engine),
+        real_distribution(default_random_number_engine));
+    const Vector3 photon_direction = x * hemisphere_direction.x +
+                                     y * hemisphere_direction.y +
+                                     z * hemisphere_direction.z;
 
     const Material& material =
         materials_[emissive_triangles_[triangle_index].material_index];

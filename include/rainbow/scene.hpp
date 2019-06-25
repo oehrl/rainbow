@@ -51,6 +51,7 @@ class Scene {
   }
 
   inline uint32_t GetTriangleCount() const { return triangles_.size(); }
+  inline float GetTotalFlux() const { return total_flux_; }
 
   inline Triangle ConstructTriangle(
       const TriangleReference& triangle_reference) const {
@@ -73,6 +74,7 @@ class Scene {
   std::vector<TriangleReference> triangles_;
   std::vector<TriangleReference> emissive_triangles_;
   std::unique_ptr<Octree> octree_;
+  float total_flux_;
 };
 
 }  // namespace rainbow
