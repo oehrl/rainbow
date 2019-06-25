@@ -243,4 +243,14 @@ inline Vector3 Cross(const Vector3& lhs, const Vector3& rhs) {
   // clang-format on
 }
 
+inline Vector3 ConstructOrthogonalVector(const Vector3& vector) {
+  if (std::abs(vector.x) > std::abs(vector.y)) {
+    return (1.0f / std::sqrt(vector.x * vector.x + vector.z * vector.z)) *
+           Vector3{-vector.z, 0.0f, vector.x};
+  } else {
+    return (1.0f / std::sqrt(vector.y * vector.y + vector.z * vector.z)) *
+           Vector3{0.0f, vector.z, -vector.y};
+  }
+}
+
 }  // namespace rainbow
