@@ -37,7 +37,8 @@ bool Scene::Load(const std::string& filename) {
   RAINBOW_TIME_SECTION("ReadFile()") {
     importer_.SetPropertyInteger(AI_CONFIG_PP_SBP_REMOVE,
                                  aiPrimitiveType_POINT | aiPrimitiveType_LINE);
-    scene_ = importer_.ReadFile(filename, aiProcess_Triangulate);
+    scene_ = importer_.ReadFile(
+        filename, aiProcess_Triangulate | aiProcess_GenSmoothNormals);
   };
   RAINBOW_TIME_SECTION("ConvertData") {
     materials_.resize(0);
@@ -63,12 +64,17 @@ bool Scene::Load(const std::string& filename) {
       const uint32_t base_index = triangles_.size() * 3;
       const uint32_t triangle_count = mesh->mNumFaces;
 
+      assert(mesh->HasPositions());
       vertex_positions_.reserve(vertex_positions_.size() + mesh->mNumVertices);
+      assert(mesh->HasNormals());
+      vertex_normals_.reserve(vertex_positions_.size() + mesh->mNumVertices);
+      assert(mesh->HasFaces());
       triangles_.reserve(triangles_.size() + mesh->mNumFaces);
 
       for (unsigned int j = 0; j < mesh->mNumVertices; ++j) {
         vertex_positions_.push_back(
-            {ConvertAssimpVectorToGLM(mesh->mVertices[j])});
+            ConvertAssimpVectorToGLM(mesh->mVertices[j]));
+        vertex_normals_.push_back(ConvertAssimpVectorToGLM(mesh->mNormals[j]));
       }
 
       for (unsigned int j = 0; j < mesh->mNumFaces; ++j) {
@@ -119,9 +125,18 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
     const auto intersection = ComputeRayTriangleIntersection(ray, triangle);
     if (intersection && intersection->distance >= 0.0f &&
         (!hitpoint || hitpoint->distance > intersection->distance)) {
-      hitpoint = HitPoint{
-          intersection->distance, intersection->intersection_point,
-          CalculateNormal(triangle), triangle_reference.material_index};
+      const Vector3 normals[3] = {
+          vertex_normals_[triangle_reference.vertex_indices[0]],
+          vertex_normals_[triangle_reference.vertex_indices[1]],
+          vertex_normals_[triangle_reference.vertex_indices[2]]};
+      const Vector3 normal =
+          Normalize(normals[0] * intersection->barycentric_coordinates.x +
+                    normals[1] * intersection->barycentric_coordinates.y +
+                    normals[2] * intersection->barycentric_coordinates.z);
+
+      hitpoint =
+          HitPoint{intersection->distance, intersection->intersection_point,
+                   normal, triangle_reference.material_index};
     }
   }
 
@@ -148,17 +163,24 @@ void Scene::GeneratePhotons(size_t photon_count,
         (1.0f - barycentric_coord_u) *
         real_distribution(default_random_number_engine);
     assert(barycentric_coord_u + barycentric_coord_v <= 1.0f);
+    float barycentric_coord_w =
+        1.0f - barycentric_coord_u - barycentric_coord_v;
 
-    const auto triangle =
-        ConstructTriangle(emissive_triangles_[triangle_index]);
+    const auto triangle_reference = emissive_triangles_[triangle_index];
 
-    const Vector3 photon_position = {
-        triangle.vertices[0] * barycentric_coord_u +
-        triangle.vertices[1] * barycentric_coord_v +
-        triangle.vertices[2] *
-            (1.0f - barycentric_coord_u - barycentric_coord_v)};
+    const auto triangle = ConstructTriangle(triangle_reference);
 
-    const Vector3 z = CalculateNormal(triangle);
+    const Vector3 photon_position = triangle.vertices[0] * barycentric_coord_u +
+                                    triangle.vertices[1] * barycentric_coord_v +
+                                    triangle.vertices[2] * barycentric_coord_w;
+
+    const Vector3 normals[3] = {
+        vertex_normals_[triangle_reference.vertex_indices[0]],
+        vertex_normals_[triangle_reference.vertex_indices[1]],
+        vertex_normals_[triangle_reference.vertex_indices[2]]};
+    const Vector3 z = Normalize(normals[0] * barycentric_coord_u +
+                                normals[1] * barycentric_coord_v +
+                                normals[2] * barycentric_coord_w);
     const Vector3 x = ConstructOrthogonalVector(z);
     const Vector3 y = Cross(x, z);
     const Vector3 hemisphere_direction = SampleHemisphereCosineWeighted(

@@ -21,8 +21,8 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   GenerateHitpoints(camera, viewport_width, viewport_height);
 
   RAINBOW_TIME_SECTION("Photon Generation") {
-    scene_->GeneratePhotons(10000, &photon_buffer_);
-    emitted_photons_count_ = 10000;
+    scene_->GeneratePhotons(1000, &photon_buffer_);
+    emitted_photons_count_ = 1000;
   };
 
   RAINBOW_TIME_SECTION("Photon Tracing") {
@@ -40,10 +40,11 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   };
 
   RAINBOW_TIME_SECTION("Estimate radiance") {
-    ParallelForEach(hitpoints_, [this](Hitpoint& hitpoint) {
+    // ParallelForEach(hitpoints_, [this](Hitpoint& hitpoint) {
+    for (auto& hitpoint : hitpoints_) {
       std::vector<Photon> photon_buffer_;
       hitpoint.radiance_estimate = Vector4::Zero();
-      photon_map_.GetKNearestNeighbors(hitpoint.position, 150, &photon_buffer_);
+      photon_map_.GetKNearestNeighbors(hitpoint.position, 1, &photon_buffer_);
       hitpoint.radius =
           Length(photon_buffer_.back().position - hitpoint.position);
 
@@ -51,10 +52,13 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
       for (const Photon& photon : photon_buffer_) {
         const float n_dot_l =
             std::max(0.0f, Dot(hitpoint.normal, -photon.direction));
-        hitpoint.radiance_estimate += OneOverPi<float>() * n_dot_l *
-                                      photon.color * material.diffuse_color;
+        hitpoint.radiance_estimate +=
+            material.diffuse_color * n_dot_l * photon.color;
+        // hitpoint.normal;
+        // OneOverPi<float>() * n_dot_l * photon.color;
       }
-    });
+    }
+    // });
   };
 
   EvaluateRadiance(viewport);
@@ -73,7 +77,7 @@ void CPUBackend::GenerateHitpoints(const Camera& camera, size_t viewport_width,
   hitpoints_.reserve(viewport_width * viewport_height);
   ParallelFor(viewport_height, [&](size_t y) {
     const float y_normalized =
-        static_cast<float>(y) / (viewport_height - 1) - 0.5f;
+        -(static_cast<float>(y) / (viewport_height - 1) - 0.5f);
     for (size_t x = 0; x < viewport_width; ++x) {
       const float x_normalized =
           static_cast<float>(x) / (viewport_width - 1) - 0.5f;
@@ -106,13 +110,15 @@ void CPUBackend::EvaluateRadiance(Viewport* viewport) {
     const auto color = viewport->GetPixel(hitpoint.pixel_location[0],
                                           hitpoint.pixel_location[1]);
     const auto& material = scene_->GetMaterial(hitpoint.material_index);
-    viewport->SetPixel(
-        hitpoint.pixel_location[0], hitpoint.pixel_location[1],
-        color +
-            (scene_->GetTotalFlux() * hitpoint.radiance_estimate *
-             (1.0f /
-              (Pi<float>() * hitpoint.radius * hitpoint.radius * 10.0f))) +
-            material.emissive_color);
+    const Vector4 radiance =
+        (scene_->GetTotalFlux() * hitpoint.radiance_estimate) /
+        (Pi<float>() * hitpoint.radius * hitpoint.radius);
+
+    viewport->SetPixel(hitpoint.pixel_location[0], hitpoint.pixel_location[1],
+                       radiance);
+    // viewport->SetPixel(
+    //     hitpoint.pixel_location[0], hitpoint.pixel_location[1],
+    //     {hitpoint.normal.x, hitpoint.normal.y, hitpoint.normal.z, 1.0});
   }
 }
 

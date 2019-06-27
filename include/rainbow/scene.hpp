@@ -46,6 +46,10 @@ class Scene {
     return vertex_positions_;
   }
 
+  inline const std::vector<Vector3>& GetVertexNormals() const {
+    return vertex_normals_;
+  }
+
   inline const std::vector<TriangleReference>& GetTriangles() const {
     return triangles_;
   }
@@ -71,6 +75,7 @@ class Scene {
 
   std::vector<Material> materials_;
   std::vector<Vector3> vertex_positions_;
+  std::vector<Vector3> vertex_normals_;
   std::vector<TriangleReference> triangles_;
   std::vector<TriangleReference> emissive_triangles_;
   std::unique_ptr<Octree> octree_;
