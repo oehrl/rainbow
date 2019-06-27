@@ -130,7 +130,13 @@ void Application::RenderPreview() {
         for (size_t x = 0; x < viewport_.GetWidth(); ++x) {
           const auto pixel_color = viewport_.GetPixel(x, y);
           for (auto i : IntegralRange{4}) {
-            pixels[y * pitch + x * 4 + i] = pixel_color[3 - i] * 255;
+            float value = pixel_color[3 - i];
+            if (value < 0.0f) {
+              value = 0.0f;
+            } else if (value > 1.0f) {
+              value = 1.0f;
+            }
+            pixels[y * pitch + x * 4 + i] = value * 255;
           }
         }
       });
