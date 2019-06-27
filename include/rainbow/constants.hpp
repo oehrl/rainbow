@@ -12,6 +12,11 @@ inline constexpr T Infinity() {
 }
 
 template <typename T>
+inline constexpr T NotANumber() {
+  return std::numeric_limits<T>::quiet_NaN();
+}
+
+template <typename T>
 inline constexpr T Pi() {
   return T{3.14159265358979323846};
 }
