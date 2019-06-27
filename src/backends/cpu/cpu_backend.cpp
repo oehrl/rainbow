@@ -20,13 +20,14 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   GenerateHitpoints(camera, viewport_width, viewport_height);
 
   RAINBOW_TIME_SECTION("Photon Generation") {
-    scene_->GeneratePhotons(1000, &photon_buffer_);
-    emitted_photons_count_ = 1000;
+    scene_->GeneratePhotons(100000, &photon_buffer_);
+    emitted_photons_count_ = 100000;
   };
 
   RAINBOW_TIME_SECTION("Photon Tracing") {
     for (auto& photon : photon_buffer_) {
-      auto intersection = scene_->ShootRay({photon.position, photon.direction});
+      auto intersection = scene_->ShootRay(
+          {photon.position + 0.000001 * photon.direction, photon.direction});
       if (intersection) {
         photon.position = intersection->position;
       }
@@ -39,11 +40,11 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   };
 
   RAINBOW_TIME_SECTION("Estimate radiance") {
-    // ParallelForEach(hitpoints_, [this](Hitpoint& hitpoint) {
-    for (auto& hitpoint : hitpoints_) {
+    ParallelForEach(hitpoints_, [this](Hitpoint& hitpoint) {
+      // for (auto& hitpoint : hitpoints_) {
       std::vector<Photon> photon_buffer_;
       hitpoint.radiance_estimate = Vector4::Zero();
-      photon_map_.GetKNearestNeighbors(hitpoint.position, 1, &photon_buffer_);
+      photon_map_.GetKNearestNeighbors(hitpoint.position, 200, &photon_buffer_);
       hitpoint.radius =
           Length(photon_buffer_.back().position - hitpoint.position);
 
@@ -51,13 +52,13 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
       for (const Photon& photon : photon_buffer_) {
         const float n_dot_l =
             std::max(0.0f, Dot(hitpoint.normal, -photon.direction));
-        hitpoint.radiance_estimate +=
-            material.diffuse_color * n_dot_l * photon.color;
-        // hitpoint.normal;
-        // OneOverPi<float>() * n_dot_l * photon.color;
+        // hitpoint.radiance_estimate += n_dot_l * Vector4::One();
+        hitpoint.radiance_estimate += OneOverPi<float>() *
+                                      material.diffuse_color * n_dot_l *
+                                      photon.color;
       }
-    }
-    // });
+      // }
+    });
   };
 
   EvaluateRadiance(viewport);
@@ -111,10 +112,15 @@ void CPUBackend::EvaluateRadiance(Viewport* viewport) {
     const auto& material = scene_->GetMaterial(hitpoint.material_index);
     const Vector4 radiance =
         (scene_->GetTotalFlux() * hitpoint.radiance_estimate) /
-        (Pi<float>() * hitpoint.radius * hitpoint.radius);
+        (Pi<float>() * hitpoint.radius * hitpoint.radius *
+         emitted_photons_count_);
 
     viewport->SetPixel(hitpoint.pixel_location[0], hitpoint.pixel_location[1],
                        radiance);
+
+    // viewport->SetPixel(hitpoint.pixel_location[0],
+    // hitpoint.pixel_location[1],
+    //                    hitpoint.radiance_estimate);
     // viewport->SetPixel(
     //     hitpoint.pixel_location[0], hitpoint.pixel_location[1],
     //     {hitpoint.normal.x, hitpoint.normal.y, hitpoint.normal.z, 1.0});
