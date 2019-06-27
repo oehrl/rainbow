@@ -262,7 +262,7 @@ inline float SquaredLength(const VectorType& vector) {
 template <typename VectorType,
           int VECTOR_ELEMENT_COUNT = VectorType::VECTOR_ELEMENT_COUNT>
 inline float Length(const VectorType& vector) {
-  return std::sqrtf(SquaredLength(vector));
+  return std::sqrt(SquaredLength(vector));
 }
 
 template <typename VectorType,
