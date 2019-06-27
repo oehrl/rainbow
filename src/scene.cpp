@@ -145,6 +145,7 @@ std::optional<Scene::HitPoint> Scene::ShootRay(const Ray& ray) const {
 void Scene::GeneratePhotons(size_t photon_count,
                             std::vector<Photon>* photon_buffer) const {
   assert(photon_buffer != nullptr);
+  assert(emissive_triangles_.size() > 0);
   photon_buffer->resize(0);
   photon_buffer->reserve(photon_count);
 
