@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glm/vec3.hpp>
-
 #include "rainbow/data_structures.hpp"
 #include "rainbow/intersection.hpp"
 #include "rainbow/scene.hpp"

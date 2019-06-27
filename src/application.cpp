@@ -3,8 +3,6 @@
 #include <chrono>
 #include <iostream>
 
-#include <glm/geometric.hpp>
-
 #ifdef RAINBOW_BACKEND_CPU
 #include "rainbow/backends/cpu/cpu_backend.hpp"
 #endif

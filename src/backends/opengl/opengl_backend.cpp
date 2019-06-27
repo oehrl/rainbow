@@ -1,5 +1,4 @@
 #include "rainbow/backends/opengl/opengl_backend.hpp"
-#include <glm/vec3.hpp>
 #include <iostream>
 #include "rainbow/camera.hpp"
 #include "rainbow/scene.hpp"

@@ -1,5 +1,4 @@
 #include "rainbow/backends/cpu/cpu_backend.hpp"
-#include <glm/vec3.hpp>
 #include <iostream>
 #include "rainbow/camera.hpp"
 #include "rainbow/parallel.hpp"

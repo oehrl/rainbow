@@ -5,7 +5,6 @@
 #include <iostream>
 
 #include <assimp/postprocess.h>
-#include <glm/gtx/string_cast.hpp>
 
 #include "rainbow/integral_range.hpp"
 #include "rainbow/octree.hpp"

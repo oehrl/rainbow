@@ -9,8 +9,6 @@
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 #include <assimp/ProgressHandler.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vec4.hpp>
 
 #include "rainbow/data_structures.hpp"
 #include "rainbow/intersection.hpp"

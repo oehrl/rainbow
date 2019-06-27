@@ -1,6 +1,5 @@
 #include "rainbow/octree.hpp"
 #include <cmath>
-#include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include <limits>
 #include <map>
@@ -136,18 +135,7 @@ void Octree::PrintCell(const OctreeCell* cell) const {
   std::cout << "[" << cell->aabb.min << "-" << cell->aabb.max
             << "]: " << cell->triangles.size() << std::endl;
 
-  if (cell->children.size() == 0) {
-    for (const auto& triangle : cell->triangles) {
-      // indent(cell->depth + 1);
-      // std::cout << "["
-      //           << glm::to_string(vertices_[triangle.indices[0]].position)
-      //           << ","
-      //           << glm::to_string(vertices_[triangle.indices[1]].position)
-      //           << ","
-      //           << glm::to_string(vertices_[triangle.indices[2]].position)
-      //           << "]" << std::endl;
-    }
-  } else {
+  if (cell->children.size() > 0) {
     for (const auto& child : cell->children) {
       PrintCell(&child);
     }
