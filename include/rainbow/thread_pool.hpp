@@ -10,6 +10,7 @@
 #include <thread>
 #include <type_traits>
 #include <vector>
+#include <functional>
 
 namespace rainbow {
 

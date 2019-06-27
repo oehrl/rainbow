@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <cassert>
 #include "rainbow/data_structures.hpp"
 
 namespace rainbow {

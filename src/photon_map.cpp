@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "rainbow/photon_map.hpp"
 
 namespace rainbow {

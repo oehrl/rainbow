@@ -1,3 +1,4 @@
+#include <ctime>
 #include "rainbow/random.hpp"
 
 namespace rainbow {
