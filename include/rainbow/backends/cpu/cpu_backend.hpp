@@ -18,6 +18,7 @@ class CPUBackend final : public RenderingBackend {
   const Scene* scene_;
   std::mutex hitpoints_mutex_;
   std::vector<Hitpoint> hitpoints_;
+  std::vector<Photon> emitted_photons_buffer_;
   std::vector<Photon> photon_buffer_;
   PhotonMap photon_map_;
   size_t emitted_photons_count_;

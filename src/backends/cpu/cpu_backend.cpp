@@ -2,6 +2,8 @@
 #include <iostream>
 #include "rainbow/camera.hpp"
 #include "rainbow/parallel.hpp"
+#include "rainbow/random.hpp"
+#include "rainbow/sampling.hpp"
 #include "rainbow/scene.hpp"
 #include "rainbow/timing.hpp"
 #include "rainbow/viewport.hpp"
@@ -20,19 +22,44 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   GenerateHitpoints(camera, viewport_width, viewport_height);
 
   RAINBOW_TIME_SECTION("Photon Generation") {
-    scene_->GeneratePhotons(100000, &photon_buffer_);
-    emitted_photons_count_ = 100000;
+    scene_->GeneratePhotons(1000000, &emitted_photons_buffer_);
+    emitted_photons_count_ = 1000000;
   };
 
+  photon_buffer_.resize(0);
+  photon_buffer_.reserve(emitted_photons_buffer_.size() * 6);
+
+  std::uniform_real_distribution<float> real_distribution;
+
   RAINBOW_TIME_SECTION("Photon Tracing") {
-    for (auto& photon : photon_buffer_) {
+    for (auto photon : emitted_photons_buffer_) {
       auto intersection = scene_->ShootRay(
           {photon.position + 0.000001 * photon.direction, photon.direction});
-      if (intersection) {
+      int bounces = 0;
+      while (intersection && bounces < 5) {
         photon.position = intersection->position;
+        photon_buffer_.push_back(photon);
+
+        const Vector3 z = intersection->normal;
+        const Vector3 x = ConstructOrthogonalVector(z);
+        const Vector3 y = Cross(x, z);
+        const Vector3 hemisphere_direction = SampleHemisphereCosineWeighted(
+            real_distribution(default_random_number_engine),
+            real_distribution(default_random_number_engine));
+        const Vector3 photon_direction = x * hemisphere_direction.x +
+                                         y * hemisphere_direction.y +
+                                         z * hemisphere_direction.z;
+        photon.direction = photon_direction;
+        photon.color *=
+            scene_->GetMaterial(intersection->material_index).diffuse_color;
+        auto intersection = scene_->ShootRay(
+            {photon.position + 0.000001 * photon.direction, photon.direction});
+        ++bounces;
       }
     }
   };
+
+  std::cout << photon_buffer_.size() << std::endl;
 
   RAINBOW_TIME_SECTION("Build Photon Map") {
     photon_map_.Build(photon_buffer_.data(),
@@ -42,14 +69,14 @@ void CPUBackend::Render(const Camera& camera, Viewport* viewport) {
   RAINBOW_TIME_SECTION("Estimate radiance") {
     ParallelForEach(hitpoints_, [this](Hitpoint& hitpoint) {
       // for (auto& hitpoint : hitpoints_) {
-      std::vector<Photon> photon_buffer_;
+      std::vector<Photon> photon_buffer;
       hitpoint.radiance_estimate = Vector4::Zero();
-      photon_map_.GetKNearestNeighbors(hitpoint.position, 200, &photon_buffer_);
+      photon_map_.GetKNearestNeighbors(hitpoint.position, 200, &photon_buffer);
       hitpoint.radius =
-          Length(photon_buffer_.back().position - hitpoint.position);
+          Length(photon_buffer.back().position - hitpoint.position);
 
       const Material& material = scene_->GetMaterial(hitpoint.material_index);
-      for (const Photon& photon : photon_buffer_) {
+      for (const Photon& photon : photon_buffer) {
         const float n_dot_l =
             std::max(0.0f, Dot(hitpoint.normal, -photon.direction));
         // hitpoint.radiance_estimate += n_dot_l * Vector4::One();
