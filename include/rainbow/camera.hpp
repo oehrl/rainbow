@@ -35,7 +35,7 @@ class Camera {
   }
 
  private:
-  Vector3 position_ = Vector3{0.0f, 1.0f, 10.0f};
+  Vector3 position_ = Vector3{0.0f, 1.0f, 3.0f};
   float yaw_ = Pi<float>();
   float pitch_ = 0.0f;
   float vertical_field_of_view_ = PiOverTwo<float>();
