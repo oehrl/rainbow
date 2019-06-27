@@ -1,13 +1,13 @@
-#include <algorithm>
 #include "rainbow/photon_map.hpp"
+#include <algorithm>
 
 namespace rainbow {
 
 void PhotonMap::Build(Photon* begin, Photon* end, size_t max_children) {
   max_children_ = max_children;
   const size_t photon_count = end - begin;
-  const double minimum_number_of_leaf_nodes =
-      static_cast<double>(photon_count) / static_cast<double>(max_children);
+  const double minimum_number_of_leaf_nodes = std::ceil(
+      static_cast<double>(photon_count) / static_cast<double>(max_children));
   const double minimum_tree_depth = std::log2(minimum_number_of_leaf_nodes);
   const double tree_depth = std::ceil(minimum_tree_depth);
   const double number_of_nodes = std::pow(2.0, tree_depth + 1.0) - 1.0;
