@@ -3,25 +3,13 @@
 #include <type_traits>
 #include <vector>
 
-#include <glm/gtc/constants.hpp>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-
+#include "rainbow/constants.hpp"
 #include "rainbow/intersection.hpp"
 
 namespace rainbow {
 
 class Camera {
  public:
-  void ComputeViewDirections(glm::uvec2 resolution,
-                             std::vector<Vector3>* ray_buffer) const;
-  inline std::vector<Vector3> ComputeViewDirections(
-      glm::uvec2 resolution) const {
-    std::vector<Vector3> directions;
-    ComputeViewDirections(resolution, &directions);
-    return directions;
-  }
-
   inline void Move(const Vector3& offset) { position_ += offset; }
   inline Vector3 GetPosition() const { return position_; }
 
@@ -47,11 +35,11 @@ class Camera {
   }
 
  private:
-  Vector3 position_ = Vector3{0.0f, 1.0f, 10.0f};
-  float yaw_ = glm::pi<float>();
+  Vector3 position_ = Vector3{0.0f, 1.0f, 3.0f};
+  float yaw_ = Pi<float>();
   float pitch_ = 0.0f;
-  float vertical_field_of_view_ = glm::half_pi<float>();
-  float horizontal_field_of_view_ = std::numeric_limits<float>::quiet_NaN();
+  float vertical_field_of_view_ = PiOverTwo<float>();
+  float horizontal_field_of_view_ = NotANumber<float>();
 };
 
 }  // namespace rainbow

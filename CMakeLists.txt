@@ -12,6 +12,7 @@ endif ()
 find_package(glm REQUIRED)
 find_package(assimp REQUIRED)
 find_package(SDL2 REQUIRED)
+find_package(Threads REQUIRED)
 
 add_executable(rainbow
   src/main.cpp
@@ -29,6 +30,9 @@ add_executable(rainbow
   src/vector.cpp
   src/data_structures.cpp
   src/constants.cpp
+  src/random.cpp
+  src/sampling.cpp
+  src/photon_map.cpp
 )
 
 set_target_properties(rainbow
@@ -43,7 +47,7 @@ target_include_directories(rainbow
 )
 
 target_link_libraries(rainbow
-  PRIVATE assimp glm SDL2
+  PRIVATE assimp glm SDL2 Threads::Threads
 )
 
 if (APPLE)

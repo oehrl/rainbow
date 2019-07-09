@@ -2,9 +2,6 @@
 
 #include <array>
 #include <cassert>
-#include <glm/geometric.hpp>
-#include <glm/vec3.hpp>
-#include <glm/vector_relational.hpp>
 #include <optional>
 #include "rainbow/constants.hpp"
 #include "rainbow/vector.hpp"
@@ -29,6 +26,12 @@ inline Vector3 CalculateCenter(const Triangle& triangle) {
 inline Vector3 CalculateNormal(const Triangle& triangle) {
   return Normalize(Cross(triangle.vertices[1] - triangle.vertices[0],
                          triangle.vertices[2] - triangle.vertices[0]));
+}
+
+inline float CalculateArea(const Triangle& triangle) {
+  const Vector3 e0 = triangle.vertices[1] - triangle.vertices[0];
+  const Vector3 e1 = triangle.vertices[2] - triangle.vertices[0];
+  return 0.5f * Length(Cross(e0, e1));
 }
 
 struct AxisAlignedBoundingBox {

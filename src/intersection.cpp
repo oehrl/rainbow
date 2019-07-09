@@ -1,6 +1,5 @@
 #include "rainbow/intersection.hpp"
 #include <cassert>
-#include <glm/gtx/intersect.hpp>
 #include <vector>
 
 namespace rainbow {
@@ -25,7 +24,7 @@ std::optional<RayTriangleIntersection> ComputeRayTriangleIntersection(
   if (v < 0.0f || u + v > 1.0f) {
     return {};
   }
-  const float t = Dot(v0v2, q_vector) / inverse_determinant;
+  const float t = Dot(v0v2, q_vector) * inverse_determinant;
   if (t < 0.0f) {
     return {};
   }

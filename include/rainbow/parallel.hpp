@@ -47,6 +47,12 @@ void ParallelForEach(const ContainterType& container, FuncType&& function) {
                   std::move(function));
 }
 
+template <typename ContainterType, typename FuncType>
+void ParallelForEach(ContainterType& container, FuncType&& function) {
+  ParallelForEach(std::begin(container), std::end(container),
+                  std::move(function));
+}
+
 template <typename IntegralType, typename FuncType>
 void ParallelFor(IntegralType end, FuncType&& function) {
   ParallelForEach(IntegralIterator<IntegralType>{},
