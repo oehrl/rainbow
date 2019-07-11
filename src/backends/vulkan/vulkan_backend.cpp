@@ -28,6 +28,44 @@ VulkanBackend::VulkanBackend() {
       vkCreateInstance(&instance_create_info, nullptr, &instance_));
 
   CreateDevice();
+
+  VkPhysicalDeviceMemoryProperties memory_properties;
+  vkGetPhysicalDeviceMemoryProperties(physical_device_, &memory_properties);
+  std::cout << "Heaps" << std::endl;
+  for (uint32_t i = 0; i < memory_properties.memoryHeapCount; ++i) {
+    std::cout << " [" << i << "]: " << memory_properties.memoryHeaps[i].size
+              << std::endl;
+  }
+  std::cout << "Memeory types" << std::endl;
+  for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
+    std::cout << " [" << i << "]->"
+              << memory_properties.memoryTypes[i].heapIndex << ":";
+    if (memory_properties.memoryTypes[i].propertyFlags &
+        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+      std::cout << " VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT";
+    }
+    if (memory_properties.memoryTypes[i].propertyFlags &
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+      std::cout << " VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT";
+    }
+    if (memory_properties.memoryTypes[i].propertyFlags &
+        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) {
+      std::cout << " VK_MEMORY_PROPERTY_HOST_COHERENT_BIT";
+    }
+    if (memory_properties.memoryTypes[i].propertyFlags &
+        VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
+      std::cout << " VK_MEMORY_PROPERTY_HOST_CACHED_BIT";
+    }
+    if (memory_properties.memoryTypes[i].propertyFlags &
+        VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) {
+      std::cout << " VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT";
+    }
+    if (memory_properties.memoryTypes[i].propertyFlags &
+        VK_MEMORY_PROPERTY_PROTECTED_BIT) {
+      std::cout << " VK_MEMORY_PROPERTY_PROTECTED_BIT";
+    }
+    std::cout << std::endl;
+  }
 }
 
 VulkanBackend::~VulkanBackend() { vkDestroyInstance(instance_, nullptr); }
