@@ -88,21 +88,6 @@ void CheckVulkanResult(VkResult result, const char* filename, int line) {
     case VK_ERROR_INVALID_SHADER_NV:
       error_name = "VK_ERROR_INVALID_SHADER_NV";
       break;
-    case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
-      error_name = "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT";
-      break;
-    case VK_ERROR_FRAGMENTATION_EXT:
-      error_name = "VK_ERROR_FRAGMENTATION_EXT";
-      break;
-    case VK_ERROR_NOT_PERMITTED_EXT:
-      error_name = "VK_ERROR_NOT_PERMITTED_EXT";
-      break;
-    case VK_ERROR_INVALID_DEVICE_ADDRESS_EXT:
-      error_name = "VK_ERROR_INVALID_DEVICE_ADDRESS_EXT";
-      break;
-    case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
-      error_name = "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
-      break;
     case VK_RESULT_RANGE_SIZE:
       error_name = "VK_RESULT_RANGE_SIZE";
       break;
