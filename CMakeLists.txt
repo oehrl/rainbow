@@ -76,6 +76,7 @@ endif (RAINBOW_BACKEND_CPU)
 if (RAINBOW_BACKEND_VULKAN)
   target_sources(rainbow
     PRIVATE
+      src/backends/vulkan/vulkan.cpp
       src/backends/vulkan/vulkan_backend.cpp
       src/backends/vulkan/error.cpp
   )
