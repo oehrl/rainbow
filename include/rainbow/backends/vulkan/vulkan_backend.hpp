@@ -20,6 +20,9 @@ class VulkanBackend final : public RenderingBackend {
   uint32_t queue_family_index_;
   VkDevice device_;
   VkQueue queue_;
+  VkDeviceMemory memory_;
+
+  VkBuffer vertex_buffer_;
 
   void CreateDevice();
 };

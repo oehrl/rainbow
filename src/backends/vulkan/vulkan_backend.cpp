@@ -2,6 +2,7 @@
 #include <iostream>
 #include <rainbow/backends/vulkan/error.hpp>
 #include "rainbow/backends/vulkan/vulkan.hpp"
+#include "rainbow/scene.hpp"
 
 namespace rainbow {
 VulkanBackend::VulkanBackend() {
@@ -28,50 +29,48 @@ VulkanBackend::VulkanBackend() {
       vkCreateInstance(&instance_create_info, nullptr, &instance_));
 
   CreateDevice();
-
-  VkPhysicalDeviceMemoryProperties memory_properties;
-  vkGetPhysicalDeviceMemoryProperties(physical_device_, &memory_properties);
-  std::cout << "Heaps" << std::endl;
-  for (uint32_t i = 0; i < memory_properties.memoryHeapCount; ++i) {
-    std::cout << " [" << i << "]: " << memory_properties.memoryHeaps[i].size
-              << std::endl;
-  }
-  std::cout << "Memeory types" << std::endl;
-  for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
-    std::cout << " [" << i << "]->"
-              << memory_properties.memoryTypes[i].heapIndex << ":";
-    if (memory_properties.memoryTypes[i].propertyFlags &
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
-      std::cout << " VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT";
-    }
-    if (memory_properties.memoryTypes[i].propertyFlags &
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
-      std::cout << " VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT";
-    }
-    if (memory_properties.memoryTypes[i].propertyFlags &
-        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) {
-      std::cout << " VK_MEMORY_PROPERTY_HOST_COHERENT_BIT";
-    }
-    if (memory_properties.memoryTypes[i].propertyFlags &
-        VK_MEMORY_PROPERTY_HOST_CACHED_BIT) {
-      std::cout << " VK_MEMORY_PROPERTY_HOST_CACHED_BIT";
-    }
-    if (memory_properties.memoryTypes[i].propertyFlags &
-        VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT) {
-      std::cout << " VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT";
-    }
-    if (memory_properties.memoryTypes[i].propertyFlags &
-        VK_MEMORY_PROPERTY_PROTECTED_BIT) {
-      std::cout << " VK_MEMORY_PROPERTY_PROTECTED_BIT";
-    }
-    std::cout << std::endl;
-  }
 }
 
 VulkanBackend::~VulkanBackend() { vkDestroyInstance(instance_, nullptr); }
 
 void VulkanBackend::Prepare(const Scene& scene, size_t viewport_width,
-                            size_t viewport_height) {}
+                            size_t viewport_height) {
+  VkDeviceSize required_memory = 0;
+  required_memory += scene.GetVertexPositions().size() * sizeof(Vector3);
+  required_memory += scene.GetVertexNormals().size() * sizeof(Vector3);
+  required_memory += scene.GetTriangleCount() * sizeof(TriangleReference);
+  required_memory += scene.GetMaterials().size() * sizeof(Material);
+  std::cout << "Memory requirement: " << required_memory << std::endl;
+
+  VkPhysicalDeviceMemoryProperties memory_properties;
+  vkGetPhysicalDeviceMemoryProperties(physical_device_, &memory_properties);
+  const auto memory_index = vulkan::FindMemoryTypeIndex(
+      memory_properties, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+  VkMemoryAllocateInfo allocate_info;
+  allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+  allocate_info.pNext = nullptr;
+  allocate_info.allocationSize = required_memory;
+  allocate_info.memoryTypeIndex = memory_index;
+  RAINBOW_CHECK_VK_RESULT(
+      vkAllocateMemory(device_, &allocate_info, nullptr, &memory_));
+
+  VkBufferCreateInfo buffer_create_info;
+  buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  buffer_create_info.pNext = nullptr;
+  buffer_create_info.flags = 0;
+  buffer_create_info.size = scene.GetVertexPositions().size() * sizeof(Vector3);
+  buffer_create_info.usage =
+      VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+  buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  buffer_create_info.queueFamilyIndexCount = 1;
+  buffer_create_info.pQueueFamilyIndices = &queue_family_index_;
+  RAINBOW_CHECK_VK_RESULT(
+      vkCreateBuffer(device_, &buffer_create_info, nullptr, &vertex_buffer_));
+  RAINBOW_CHECK_VK_RESULT(
+      vkBindBufferMemory(device_, vertex_buffer_, memory_, 0));
+}
 
 void VulkanBackend::Render(const Camera& camera, Viewport* viewport) {}
 

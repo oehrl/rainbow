@@ -41,5 +41,16 @@ std::vector<uint32_t> GetQueueFamilyIndicesForFlags(VkPhysicalDevice device,
   return suitable_queue_family_indices;
 }
 
+uint32_t FindMemoryTypeIndex(
+    const VkPhysicalDeviceMemoryProperties& memory_properties,
+    VkMemoryPropertyFlags flags) {
+  for (uint32_t i = 0; i < memory_properties.memoryTypeCount; ++i) {
+    if ((memory_properties.memoryTypes[i].propertyFlags & flags) == flags) {
+      return i;
+    }
+  }
+  throw std::runtime_error("Cannot find suitable memory type");
+}
+
 }  // namespace vulkan
 }  // namespace rainbow
