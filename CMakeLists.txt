@@ -82,9 +82,9 @@ if (RAINBOW_BACKEND_VULKAN)
   target_compile_definitions(rainbow
     PRIVATE RAINBOW_BACKEND_VULKAN=1
   )
-  
+
   find_package(Vulkan REQUIRED)
-  target_link_libraries(rainbow PRIVATE Vulkan)
+  target_link_libraries(rainbow PRIVATE Vulkan::Vulkan)
 endif (RAINBOW_BACKEND_VULKAN)
 
 if (RAINBOW_BACKEND_OPENGL)
