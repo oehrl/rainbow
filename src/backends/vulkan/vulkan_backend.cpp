@@ -1,6 +1,7 @@
 #include "rainbow/backends/vulkan/vulkan_backend.hpp"
 #include <iostream>
 #include <rainbow/backends/vulkan/error.hpp>
+#include "rainbow/backends/vulkan/vulkan.hpp"
 
 namespace rainbow {
 VulkanBackend::VulkanBackend() {
@@ -26,47 +27,7 @@ VulkanBackend::VulkanBackend() {
   RAINBOW_CHECK_VK_RESULT(
       vkCreateInstance(&instance_create_info, nullptr, &instance_));
 
-  uint32_t physical_device_count;
-  RAINBOW_CHECK_VK_RESULT(
-      vkEnumeratePhysicalDevices(instance_, &physical_device_count, nullptr));
-  std::vector<VkPhysicalDevice> physical_devices{physical_device_count};
-  RAINBOW_CHECK_VK_RESULT(vkEnumeratePhysicalDevices(
-      instance_, &physical_device_count, physical_devices.data()));
-  for (const auto& device : physical_devices) {
-    VkPhysicalDeviceProperties properties;
-    vkGetPhysicalDeviceProperties(device, &properties);
-    std::cout << properties.deviceName << std::endl;
-
-    uint32_t queue_family_properties_count;
-    vkGetPhysicalDeviceQueueFamilyProperties(
-        device, &queue_family_properties_count, nullptr);
-    std::vector<VkQueueFamilyProperties> queue_family_properties{
-        queue_family_properties_count};
-    vkGetPhysicalDeviceQueueFamilyProperties(
-        device, &queue_family_properties_count, queue_family_properties.data());
-
-    int queue_family_index = 0;
-    for (const auto& properties : queue_family_properties) {
-      std::cout << "  [" << queue_family_index << "]:";
-      if ((properties.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0) {
-        std::cout << " VK_QUEUE_GRAPHICS_BIT";
-      }
-      if ((properties.queueFlags & VK_QUEUE_COMPUTE_BIT) != 0) {
-        std::cout << " VK_QUEUE_COMPUTE_BIT";
-      }
-      if ((properties.queueFlags & VK_QUEUE_TRANSFER_BIT) != 0) {
-        std::cout << " VK_QUEUE_TRANSFER_BIT";
-      }
-      if ((properties.queueFlags & VK_QUEUE_SPARSE_BINDING_BIT) != 0) {
-        std::cout << " VK_QUEUE_SPARSE_BINDING_BIT";
-      }
-      if ((properties.queueFlags & VK_QUEUE_PROTECTED_BIT) != 0) {
-        std::cout << " VK_QUEUE_PROTECTED_BIT";
-      }
-      std::cout << std::endl;
-      ++queue_family_index;
-    }
-  }
+  CreateDevice();
 }
 
 VulkanBackend::~VulkanBackend() { vkDestroyInstance(instance_, nullptr); }
@@ -75,5 +36,47 @@ void VulkanBackend::Prepare(const Scene& scene, size_t viewport_width,
                             size_t viewport_height) {}
 
 void VulkanBackend::Render(const Camera& camera, Viewport* viewport) {}
+
+void VulkanBackend::CreateDevice() {
+  for (const auto& device : vulkan::GetPhysicalDevices(instance_)) {
+    auto suitable_queue_families =
+        vulkan::GetQueueFamilyIndicesForFlags(device, VK_QUEUE_COMPUTE_BIT);
+    if (suitable_queue_families.size() > 0) {
+      VkPhysicalDeviceProperties properties;
+      vkGetPhysicalDeviceProperties(device, &properties);
+      std::cout << "Using: " << properties.deviceName << std::endl;
+
+      physical_device_ = device;
+      queue_family_index_ = suitable_queue_families.front();
+      break;
+    }
+  }
+
+  float queue_priorities = 1.0f;
+
+  VkDeviceQueueCreateInfo queue_create_info;
+  queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+  queue_create_info.pNext = nullptr;
+  queue_create_info.flags = 0;
+  queue_create_info.queueFamilyIndex = queue_family_index_;
+  queue_create_info.queueCount = 1;
+  queue_create_info.pQueuePriorities = &queue_priorities;
+
+  VkDeviceCreateInfo device_create_info;
+  device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  device_create_info.pNext = nullptr;
+  device_create_info.flags = 0;
+  device_create_info.queueCreateInfoCount = 1;
+  device_create_info.pQueueCreateInfos = &queue_create_info;
+  device_create_info.enabledLayerCount = 0;
+  device_create_info.ppEnabledLayerNames = nullptr;
+  device_create_info.enabledExtensionCount = 0;
+  device_create_info.ppEnabledExtensionNames = nullptr;
+  device_create_info.pEnabledFeatures = nullptr;
+
+  RAINBOW_CHECK_VK_RESULT(
+      vkCreateDevice(physical_device_, &device_create_info, nullptr, &device_));
+  vkGetDeviceQueue(device_, queue_family_index_, 0, &queue_);
+}
 
 }  // namespace rainbow

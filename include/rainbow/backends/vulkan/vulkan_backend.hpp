@@ -16,6 +16,12 @@ class VulkanBackend final : public RenderingBackend {
 
  private:
   VkInstance instance_;
+  VkPhysicalDevice physical_device_;
+  uint32_t queue_family_index_;
+  VkDevice device_;
+  VkQueue queue_;
+
+  void CreateDevice();
 };
 
 }  // namespace rainbow
