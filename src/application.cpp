@@ -12,6 +12,9 @@
 #ifdef RAINBOW_BACKEND_METAL
 #include "rainbow/backends/metal/metal_backend.hpp"
 #endif
+#ifdef RAINBOW_BACKEND_VULKAN
+#include "rainbow/backends/vulkan/vulkan_backend.hpp"
+#endif
 #include "rainbow/parallel.hpp"
 #include "rainbow/timing.hpp"
 
@@ -33,7 +36,9 @@ Application::Application() : viewport_{512, 512} {
     throw std::runtime_error("Failed to create viewport texture!");
   }
 
-#if RAINBOW_BACKEND_METAL
+#if RAINBOW_BACKEND_VULKAN
+  rendering_backend_ = std::make_unique<VulkanBackend>();
+#elif RAINBOW_BACKEND_METAL
   rendering_backend_ = MakeMetalBackend();
 #elif RAINBOW_BACKEND_OPENGL
   rendering_backend_ = std::make_unique<OpenGLBackend>(window_);

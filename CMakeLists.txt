@@ -3,6 +3,7 @@ project(rainbow)
 
 # cmake_dependent_option() does not seem to work properly
 option(RAINBOW_BACKEND_CPU "Enable the CPU rendering backend" ON)
+option(RAINBOW_BACKEND_VULKAN "Enable the Vulkan rendering backend" ON)
 if (APPLE)
   option(RAINBOW_BACKEND_METAL "Enable the Metal rendering backend" ON)
 else ()
@@ -72,6 +73,19 @@ if (RAINBOW_BACKEND_CPU)
   )
 endif (RAINBOW_BACKEND_CPU)
 
+if (RAINBOW_BACKEND_VULKAN)
+  target_sources(rainbow
+    PRIVATE
+      src/backends/vulkan/vulkan_backend.cpp
+      src/backends/vulkan/error.cpp
+  )
+  target_compile_definitions(rainbow
+    PRIVATE RAINBOW_BACKEND_VULKAN=1
+  )
+  
+  find_package(Vulkan REQUIRED)
+  target_link_libraries(rainbow PRIVATE Vulkan)
+endif (RAINBOW_BACKEND_VULKAN)
 
 if (RAINBOW_BACKEND_OPENGL)
   target_sources(rainbow
